@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Carts</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Active Carts</h1>
+        <ul class="cart-list">
+            <li><button onclick="openCartDetails('James')">James</button></li>
+            <li><button onclick="openCartDetails('Madison')">Madison</button></li>
+        </ul>
+    </div>
+
+    <div id="cartDetails" class="details-container" style="display:none;">
+        <button onclick="goBack()">Back to list</button>
+        <h2 id="cartName"></h2>
+        <div id="cartInfo"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
