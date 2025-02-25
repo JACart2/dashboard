@@ -3,18 +3,22 @@ const cartDetails = {
     "James": {
         battery: "80%",
         currentVideoLink: "https://example.com/james_video",
-        gpsCoordinates: "37.7749° N, 122.4194° W",
+        gpsCoordinates: `38°26'00.3"N 78°51'41.9"W`,
         enRoute: true,
-        destination: "San Francisco",
-        tripCompletion: 45
+        destination: "E-Hall",
+        tripCompletion: 45,
+        currentPOI: "..Moving..",
+        img: "james.png"
     },
     "Madison": {
         battery: "65%",
         currentVideoLink: "https://example.com/madison_video",
-        gpsCoordinates: "34.0522° N, 118.2437° W",
+        gpsCoordinates: `38°25'57.7"N 78°51'36.1"W`,
         enRoute: false,
         destination: "N/A",
-        tripCompletion: 0
+        tripCompletion: 0,
+        currentPOI: "Festival",
+        img: "madison.png"
     }
 };
 
@@ -30,10 +34,11 @@ function openCartDetails(cartName) {
     cartInfoElem.innerHTML = `
         <p><strong>Battery:</strong> ${cart.battery}</p>
         <p><strong>Current Video:</strong> <a href="${cart.currentVideoLink}" target="_blank">Watch</a></p>
-        <p><strong>GPS Coordinates:</strong> ${cart.gpsCoordinates}</p>
+        <p><strong>GPS Coordinates:</strong> ${cart.gpsCoordinates} (${cart.currentPOI})</p>
         <p><strong>En Route:</strong> ${cart.enRoute ? "YES" : "NO"}</p>
         ${cart.enRoute ? `<p><strong>Destination:</strong> ${cart.destination}</p>` : ''}
         ${cart.enRoute ? `<p><strong>Trip Completion:</strong> ${cart.tripCompletion}%</p>` : ''}
+        <img src="${cart.img}" alt="image" width="1800" height="900">
     `;
 
     detailsContainer.style.display = 'block';
