@@ -38,7 +38,7 @@ function openCartDetails(cartName) {
         <p><strong>En Route:</strong> ${cart.enRoute ? "YES" : "NO"}</p>
         ${cart.enRoute ? `<p><strong>Destination:</strong> ${cart.destination}</p>` : ''}
         ${cart.enRoute ? `<p><strong>Trip Completion:</strong> ${cart.tripCompletion}%</p>` : ''}
-        <img src="${cart.img}" alt="image" width="1800" height="900">
+        <img src="${cart.img}" alt="image" width="750" height="400">
     `;
 
     detailsContainer.style.display = 'block';
