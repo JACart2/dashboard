@@ -28,3 +28,6 @@ This will **not** work on JMU-Official-Wireless or JMU-Robotics wifi networks. M
 
 ## Seeing ROS2 Topics
 In order to confirm that you can see the topics, run `ros2 topic list` on both machines and ensure the topics are the same. If the only topics are `/rosout` and  `/parameter_events`, you can run `ros2 run demo_nodes_cpp talker` on computer1 and `ros2 topic list` on computer2. You should see the `/chatter` topic on computer2. You can see this info using `ros2 topic echo /chatter`. This should transfer to the JACart topics as well.
+
+## Debugging
+If this doesn't work, potentially the firewall is to blame. Type `sudo ufw disable` to turn it off. Make sure to turn it back on afterwards.
