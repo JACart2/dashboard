@@ -1,0 +1,19 @@
+.tripInfoCard {
+    /* Forcing 400px for now, can make responsive later if desired */
+    /* width: clamp(400px, 25%, 400px); */
+    width: 100%;
+    outline: 2px solid transparent;
+    transition: all 0.2s;
+    height: fit-content;
+}
+
+.tripInfoCard.showHover:hover {
+    outline: 2px solid #1677FF;
+    box-shadow: 0 0 8px #1677FF;
+    cursor: pointer;
+}
+
+.cardTitle {
+    align-items: center;
+    gap: 8px;
+}

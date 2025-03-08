@@ -1,0 +1,43 @@
+{
+  "name": "dashboard",
+  "version": "1.0.0",
+  "description": "Dashboard control center for seeing all cart data and managing them real time. This should be ran on an external server that the carts can communicate with through the Internet.",
+  "main": "server.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npm run serve",
+    "dev": "npm run serve:watch",
+    "serve": "tsx src/server.ts",
+    "serve:watch": "tsx watch src/server.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JACart2/dashboard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JACart2/dashboard/issues"
+  },
+  "homepage": "https://github.com/JACart2/dashboard#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "redis": "^4.7.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/dotenv": "^8.2.3",
+    "@types/express": "^5.0.0",
+    "@types/redis": "^4.0.11",
+    "@types/socket.io": "^3.0.1",
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

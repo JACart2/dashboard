@@ -1,0 +1,13 @@
+:root {
+    --jmu-purple: #450084;
+    --jmu-gold: #CBB677;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin: 0
+}
