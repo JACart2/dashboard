@@ -5,8 +5,8 @@
   "main": "server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "npm run serve",
-    "dev": "npm run serve:watch",
+    "start": "concurrently \"redis-server redis.conf\" \"npm run serve\"",
+    "dev": "concurrently \"redis-server redis.conf\" \"npm run serve:watch\"",
     "serve": "tsx src/server.ts",
     "serve:watch": "tsx watch src/server.ts"
   },

@@ -39,8 +39,6 @@ vehicleRouter.get("/:id/", async (req, res) => {
 });
 
 vehicleRouter.post("/", async (req, res) => {
-  console.log(req);
-
   const id = await redis.incr("vehicle:id");
 
   const vehicleData: Record<string, string> = {
