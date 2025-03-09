@@ -6,7 +6,9 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: "../server/static",
-    sourcemap: true, // Ensures source maps are generated in production builds
+    rollupOptions: {
+      treeshake: true, // Ensure tree shaking is enabled
+    },
   },
   server: {
     open: true, // Automatically open the app in the browser on server start

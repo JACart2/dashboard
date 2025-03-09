@@ -3,14 +3,16 @@ import { Content, Header } from "antd/es/layout/layout";
 import styles from "./dashboard.module.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-import { useEffect, useRef, useState } from "react";
+import { lazy, useEffect, useRef, useState } from "react";
 import { Protocol } from "pmtiles";
 import maplibregl, { Marker } from "maplibre-gl";
-import TripInfoCard from "../trip-info-card/trip-info-card";
 import { vehicleSocket } from "../../services/vehicleSocket";
 import { vehicleService } from "../../services/vehicleService";
 
+const TripInfoCard = lazy(() => import("../trip-info-card/trip-info-card"));
+
 interface Cart {
+    id: number,
     name: string,
     speed: number,
     tripProgress: number,
@@ -25,21 +27,24 @@ export default function Dashboard() {
     const map = useRef<maplibregl.Map | null>(null)
     const mapRef = useRef<HTMLDivElement | null>(null)
     const cartMarkers = useRef<{ [key: string]: Marker }>({})
-    const [carts, setCarts] = useState<{ [key: number]: Cart }>([])
+    const [carts, setCarts] = useState<{ [key: number]: Cart }>({})
 
     function updateCart(id: number, data: Cart) {
-        setCarts(
-            {
-                ...carts,
-                [id]: {
-                    ...carts[id],
-                    ...data
-                }
+        setCarts(prevCarts => ({
+            ...prevCarts,
+            [id]: {
+                ...prevCarts[id], // Merge existing cart data
+                ...data
             }
-        )
+        }));
     }
 
     function addVehicle() {
+        let longLat = [
+            (Math.random() * 0.004) - 78.86,
+            (Math.random() * 0.004) + 38.43
+        ]
+
         fetch("http://localhost:8002/api/vehicles", {
             method: "POST",
             headers: {
@@ -47,11 +52,12 @@ export default function Dashboard() {
             },
             body: JSON.stringify({
                 name: "James",
-                speed: "12",
-                long: 12,
-                lat: 14,
-                startLocation: "start",
-                endLocation: "end",
+                speed: Math.random() * 8,
+                // long: (Math.random() * 0.004) - 78.86,
+                // lat: (Math.random() * 0.004) + 38.43,
+                longLat: longLat,
+                startLocation: "Starting point",
+                endLocation: "Ending point",
             }),
         });
 
@@ -91,6 +97,27 @@ export default function Dashboard() {
         });
     }
 
+    function addMarker(cart: Cart) {
+        if (cart.longLat == undefined || cart.longLat.length < 2) return
+
+        if (cartMarkers.current[cart.id] == undefined) {
+            const marker = new Marker()
+                .setLngLat([cart.longLat[0], cart.longLat[1]])
+                .addTo(map.current!);
+
+            cartMarkers.current[cart.id] = marker
+        } else {
+            cartMarkers.current[cart.id].setLngLat([cart.longLat[0], cart.longLat[1]])
+        }
+
+
+        // .setPopup(popup)
+    }
+
+    useEffect(() => {
+        Object.values(carts).forEach(cart => addMarker(cart))
+    }, [carts])
+
     useEffect(() => {
         if (map.current != undefined || mapRef.current == undefined) return
 
@@ -120,14 +147,7 @@ export default function Dashboard() {
             cartMarkers.current = {}
 
             Object.values(carts).forEach(cart => {
-                const marker = new Marker()
-                    .setLngLat([cart.longLat[0], cart.longLat[1]])
-                    .addTo(map.current!);
-
-
-                // .setPopup(popup)
-
-                cartMarkers.current[cart.name] = marker
+                addMarker(cart)
             })
         });
 

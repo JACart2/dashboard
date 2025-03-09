@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { redis, redisPub } from "../config/db";
+import { redis, redisPub, redisSub } from "../config/db";
+import CartModel from "../models/cart-model";
 
 const vehicleRouter = Router();
 
@@ -17,7 +18,14 @@ vehicleRouter.get("/", async (req, res) => {
       try {
         const data = await redis.hGetAll(key);
         const id = key.split(":").pop();
-        return { id: id, ...data }; // Include the key as ID
+
+        const parsedData = {};
+
+        Object.entries(data).forEach(([key, value]: [string, any]) => {
+          parsedData[key] = JSON.parse(value);
+        });
+
+        return { id: id, ...parsedData }; // Include the key as ID
       } catch (err) {
         console.log(err.message);
       }
@@ -41,15 +49,18 @@ vehicleRouter.get("/:id/", async (req, res) => {
 vehicleRouter.post("/", async (req, res) => {
   const id = await redis.incr("vehicle:id");
 
-  const vehicleData: Record<string, string> = {
-    name: req.body.name ?? "unknown",
-    speed: req.body.speed ?? 0, // Default speed to "0" if not provided
-    startLocation: req.body.startLocation || "Unknown", // Default location if not provided
-    endLocation: req.body.endLocation || "Unknown", // Default location if not provided
-  };
+  const vehicleData: Record<string, string> = {};
+  const rawData = {};
+
+  Object.entries(req.body).forEach(([key, value]: [string, any]) => {
+    if (key in CartModel) {
+      vehicleData[key] = JSON.stringify(value);
+      rawData[key] = value;
+    }
+  });
 
   await redis.hSet(`vehicle:${id}`, vehicleData);
-  await redisPub.publish("vehicles", JSON.stringify({ id: id, ...req.body }));
+  await redisPub.publish("vehicles", JSON.stringify({ id: id, ...rawData }));
 });
 
 vehicleRouter.patch("/:id/", async (req, res) => {

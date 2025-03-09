@@ -6,6 +6,7 @@ import helmet from "helmet";
 import cors = require("cors");
 import { Server } from "socket.io";
 import path = require("path");
+import { redisSub } from "./config/db";
 
 const app = express();
 const server = createServer(app);
@@ -36,5 +37,10 @@ app.use("/api", routes);
 app.use(express.static(path.join(__dirname, "../static")));
 app.use(cors());
 
-const PORT = 8002; //process.env.PORT || 3000;
+redisSub.subscribe("vehicles", (message) => {
+  console.log("Received vehicle update:", message);
+  io.emit("vehicles", JSON.parse(message));
+});
+
+const PORT = 8002;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
