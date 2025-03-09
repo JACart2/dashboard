@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { redis, redisPub, redisSub } from "../config/db";
-import CartModel from "../models/cart-model";
+import { redis, redisPub, redisSub } from "../../config/db";
+import CartModel from "./cart.model";
+import { Utils } from "../../config/utils";
 
 const vehicleRouter = Router();
 
@@ -19,11 +20,7 @@ vehicleRouter.get("/", async (req, res) => {
         const data = await redis.hGetAll(key);
         const id = key.split(":").pop();
 
-        const parsedData = {};
-
-        Object.entries(data).forEach(([key, value]: [string, any]) => {
-          parsedData[key] = JSON.parse(value);
-        });
+        const parsedData = Utils.parseData(data);
 
         return { id: id, ...parsedData }; // Include the key as ID
       } catch (err) {
@@ -49,20 +46,16 @@ vehicleRouter.get("/:id/", async (req, res) => {
 vehicleRouter.post("/", async (req, res) => {
   const id = await redis.incr("vehicle:id");
 
-  const vehicleData: Record<string, string> = {};
-  const rawData = {};
+  const data = Utils.stringifyModel(CartModel, req.body);
 
-  Object.entries(req.body).forEach(([key, value]: [string, any]) => {
-    if (key in CartModel) {
-      vehicleData[key] = JSON.stringify(value);
-      rawData[key] = value;
-    }
-  });
-
-  await redis.hSet(`vehicle:${id}`, vehicleData);
-  await redisPub.publish("vehicles", JSON.stringify({ id: id, ...rawData }));
+  await redis.hSet(`vehicle:${id}`, data.object);
+  await redisPub.publish(
+    "vehicles",
+    JSON.stringify({ id: id, ...data.stringified })
+  );
 });
 
+// Not currently functional, acts as POST instead of PATCH
 vehicleRouter.patch("/:id/", async (req, res) => {
   const exists = await redis.exists(`vehicle:${req.params.id}`);
 

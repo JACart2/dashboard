@@ -1,5 +1,5 @@
 import { Router } from "express";
-import vehicleRouter from "./cart.route";
+import vehicleRouter from "./models/cart/cart.route";
 
 const routes = Router();
 
