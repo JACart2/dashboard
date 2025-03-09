@@ -1,6 +1,26 @@
 # dashboard
 Dashboard control center for seeing all cart data and managing them real time. This should be ran on an external server that the carts can communicate with through the Internet.
 
+# Installation & Running
+
+To install:
+
+- Navigate to `dashboard/ui`
+- Run `npm install`
+- Navigate to `dashboard/server`
+- Run `npm install`
+- Ensure that `redis` is installed on your machine
+  - [Installation instructions](https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/)
+
+To run:
+
+- Navigate to `dashboard/ui`
+- Run `npm run build` to generate static files
+  - If developing, run `npm run dev` to enable live updates
+- Navigate to `dashboard/server`
+- Run `npm run start` to run both the Redis cache and the Node server
+  - If developing, run `npm run dev` to enable live updates
+
 # How to see ROS2 topics between multiple computers
 This is referring to being able to see the ROS2 topics of computer1 on computer2, or in the future, be able to see the ros2 topics of James and Madison on the dashboard server, in order to show that data to the admin.
 
