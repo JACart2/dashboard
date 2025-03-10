@@ -160,9 +160,9 @@ export default function Dashboard() {
     return (
         <Layout className={styles.dashboardContainer}>
             <Header>
-                <Flex>
+                <Flex justify="space-between" align="center">
                     <h1 style={{ color: 'white' }}>JACart Dashboard</h1>
-                    <button onClick={addVehicle}>Add Vehicle</button>
+                    <button onClick={addVehicle} className={styles.headerButton}>+ Add Vehicle</button>
                 </Flex>
             </Header>
             <Content>

@@ -1,3 +1,11 @@
+.headerButton {
+    padding: 8px;
+    height: fit-content;
+    background-color: var(--jmu-gold);
+    border: none;
+    border-radius: 8px;
+}
+
 .dashboardContainer {
     height: 100vh;
 }

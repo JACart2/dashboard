@@ -68,7 +68,8 @@ export default function TripInfoCard({ name, speed, tripProgress, startLocation,
                     }
                 </div>
 
-                <Progress type="dashboard" percent={speedToPercent(speed)} format={() => `${Math.round(speed * 100) / 100} mph`} style={{ margin: '0 auto' }} />
+                <Progress type="dashboard" percent={speedToPercent(speed)} format={() => `${Math.round(speed * 100) / 100} mph`}
+                    style={{ margin: '0 auto' }} status="normal" />
 
             </Flex>
         </Card>
