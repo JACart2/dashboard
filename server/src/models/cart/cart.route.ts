@@ -54,7 +54,7 @@ vehicleRouter.post("/", async (req, res) => {
     JSON.stringify({ id: id, ...data.stringified })
   );
 
-  res.send(data.object);
+  res.send({ id: id, ...data.object });
 });
 
 vehicleRouter.put("/:id/", async (req, res) => {
