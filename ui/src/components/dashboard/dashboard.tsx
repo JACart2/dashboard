@@ -8,20 +8,9 @@ import { Protocol } from "pmtiles";
 import maplibregl, { Marker } from "maplibre-gl";
 import { vehicleSocket } from "../../services/vehicleSocket";
 import { vehicleService } from "../../services/vehicleService";
+import { Vehicle, VehicleMap } from "../../types";
 
 const TripInfoCard = lazy(() => import("../trip-info-card/trip-info-card"));
-
-interface Cart {
-    id: number,
-    name: string,
-    speed: number,
-    tripProgress: number,
-    longLat: number[]
-    long?: number,
-    lat?: number,
-    startLocation: string,
-    endLocation: string
-}
 
 function generateRandomLetters(length: number): string {
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -40,9 +29,9 @@ export default function Dashboard() {
     const map = useRef<maplibregl.Map | null>(null)
     const mapRef = useRef<HTMLDivElement | null>(null)
     const cartMarkers = useRef<{ [key: string]: Marker }>({})
-    const [carts, setCarts] = useState<{ [key: number]: Cart }>({})
+    const [carts, setCarts] = useState<VehicleMap>({})
 
-    function updateCart(id: number, data: Cart) {
+    function updateCart(id: number, data: Vehicle) {
         setCarts(prevCarts => ({
             ...prevCarts,
             [id]: {
@@ -110,7 +99,7 @@ export default function Dashboard() {
         });
     }
 
-    function addMarker(cart: Cart) {
+    function addMarker(cart: Vehicle) {
         if (cart.longLat == undefined || cart.longLat.length < 2) return
 
         if (cartMarkers.current[cart.id] == undefined) {
@@ -136,7 +125,7 @@ export default function Dashboard() {
 
         vehicleService.getVehicles().then((vehicles) => {
             console.log(vehicles);
-            setCarts(vehicles as { [key: number]: Cart })
+            setCarts(vehicles as VehicleMap)
         })
         vehicleSocket.subscribe(vehicleSocketCallback);
 
@@ -181,8 +170,8 @@ export default function Dashboard() {
             <Content>
                 <Flex className={styles.fillHeight}>
                     <Flex className={styles.dashboardCards} vertical gap="middle" justify="flex-start">
-                        {Object.values(carts).map((cart: Cart) => (
-                            <TripInfoCard {...cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name}></TripInfoCard>
+                        {Object.values(carts).map((cart: Vehicle) => (
+                            <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name}></TripInfoCard>
                         ))}
                     </Flex>
                     <div ref={mapRef} id={styles.map}></div>

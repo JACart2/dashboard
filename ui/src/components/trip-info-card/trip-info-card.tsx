@@ -6,23 +6,20 @@ import { FaCarSide, FaLocationArrow, FaLocationCrosshairs, FaLocationDot, FaRigh
 import { useNavigate } from "react-router-dom";
 
 import styles from './trip-info-card.module.css'
+import { Vehicle } from "../../types";
 
 interface TripInfoProps {
-    name: string;
-    speed: number;
-    tripProgress: number;
-    startLocation?: string,
-    endLocation?: string,
-    longLat?: number[],
+    cart: Vehicle
     focusCartCallback?: (a: number[]) => void
     doesNavToRoot?: boolean
 }
 
-export default function TripInfoCard({ name, speed, tripProgress, startLocation, endLocation, longLat, focusCartCallback, doesNavToRoot }: TripInfoProps) {
+export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot }: TripInfoProps) {
     const navigate = useNavigate();
 
 
-    function speedToPercent(speed: number) {
+    function speedToPercent(speed?: number) {
+        speed = speed ?? 0;
         const max = 8;
         return (Math.min(Math.max(0, speed), max) / max) * 100;
     }
@@ -31,9 +28,9 @@ export default function TripInfoCard({ name, speed, tripProgress, startLocation,
         e.preventDefault();
         e.stopPropagation();
 
-        if (focusCartCallback == undefined || longLat == undefined) return;
+        if (focusCartCallback == undefined || cart.longLat == undefined) return;
 
-        focusCartCallback(longLat);
+        focusCartCallback(cart.longLat);
     }
 
     function navToRoot(): void {
@@ -42,12 +39,18 @@ export default function TripInfoCard({ name, speed, tripProgress, startLocation,
         }
     }
 
+    function getSpeedLabel() {
+        return (<span style={{ fontSize: '14pt' }}>
+            {cart.speed == undefined ? 'N/A' : `${Math.round(cart.speed * 100) / 100} mph`}
+        </span>)
+    }
+
     return (
         <Card className={clsx(styles.tripInfoCard, { [styles.showHover]: doesNavToRoot })} onClick={() => navToRoot()} title={
             // Card title (icon, name, locate button)
             <Flex className={styles.cardTitle} justify="space-between">
-                <Flex className={styles.cardTitle}><FaCarSide /> <span>{name}</span></Flex>
-                {!!longLat &&
+                <Flex className={styles.cardTitle}><FaCarSide /> <span>{cart.name}</span></Flex>
+                {!!cart.longLat &&
                     <Button className={styles.cartLocateButton} onClick={($event) => emitFocusCart($event)} icon={<FaLocationCrosshairs />} shape="circle"></Button>
                 }
             </Flex>
@@ -55,21 +58,21 @@ export default function TripInfoCard({ name, speed, tripProgress, startLocation,
             <Flex vertical gap="large">
                 <div>
                     <span style={{ fontWeight: 'bold' }}>Trip Progress</span>
-                    <Progress type="line" percent={tripProgress} />
+                    <Progress type="line" percent={cart.tripProgress} />
 
-                    {!!startLocation && !!endLocation &&
+                    {!!cart.startLocation && !!cart.endLocation &&
                         <Flex align="center" style={{ gap: '4px' }}>
                             <FaLocationArrow color="blue" />
-                            <span>{startLocation}</span>
+                            <span>{cart.startLocation}</span>
                             <FaRightLong style={{ margin: '0 8px', opacity: 0.6 }} />
                             <FaLocationDot color="#E04A3A" />
-                            <span>{endLocation}</span>
+                            <span>{cart.endLocation}</span>
                         </Flex>
                     }
                 </div>
 
-                <Progress type="dashboard" percent={speedToPercent(speed)} style={{ margin: '0 auto' }} status="normal"
-                    format={() => (<span style={{ fontSize: '14pt' }}>{Math.round(speed * 100) / 100} mph</span>)} />
+                <Progress type="dashboard" percent={speedToPercent(cart.speed)} style={{ margin: '0 auto' }} status="normal"
+                    format={() => getSpeedLabel()} />
 
             </Flex>
         </Card>
