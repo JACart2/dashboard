@@ -23,6 +23,19 @@ interface Cart {
     endLocation: string
 }
 
+function generateRandomLetters(length: number): string {
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    const randomLetters = [];
+
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * letters.length);
+        randomLetters.push(letters[randomIndex]);
+    }
+
+    return randomLetters.join('');
+}
+
+
 export default function Dashboard() {
     const map = useRef<maplibregl.Map | null>(null)
     const mapRef = useRef<HTMLDivElement | null>(null)
@@ -51,7 +64,7 @@ export default function Dashboard() {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                name: "James",
+                name: generateRandomLetters(8),
                 speed: Math.random() * 8,
                 // long: (Math.random() * 0.004) - 78.86,
                 // lat: (Math.random() * 0.004) + 38.43,
