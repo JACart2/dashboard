@@ -53,22 +53,20 @@ vehicleRouter.post("/", async (req, res) => {
     "vehicles",
     JSON.stringify({ id: id, ...data.stringified })
   );
+
+  res.send(data.object);
 });
 
-// Not currently functional, acts as POST instead of PATCH
-vehicleRouter.patch("/:id/", async (req, res) => {
-  const exists = await redis.exists(`vehicle:${req.params.id}`);
+vehicleRouter.put("/:id/", async (req, res) => {
+  const data = Utils.stringifyModel(CartModel, req.body);
 
-  if (exists <= 0) {
-    res.status(404).json({ error: "Vehicle not found" });
-    return;
-  }
-
-  await redis.hSet(`vehicle:${req.params.id}`, req.body);
+  await redis.hSet(`vehicle:${req.params.id}`, data.object);
   await redisPub.publish(
     "vehicles",
-    JSON.stringify({ id: req.params.id, ...req.body })
+    JSON.stringify({ id: req.params.id, ...data.stringified })
   );
+
+  res.send(data.object);
 });
 
 export default vehicleRouter;
