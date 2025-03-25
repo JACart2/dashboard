@@ -13,9 +13,10 @@ const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: ["http://192.168.50.88:8002", "http://locahost:8002"],
     methods: ["GET", "POST"],
   },
+  transports: ["websocket", "polling"],
 });
 
 io.on("connection", (socket) => {
@@ -31,11 +32,12 @@ io.on("connection", (socket) => {
   });
 });
 
+app.use(cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/api", routes);
 app.use(express.static(path.join(__dirname, "../static")));
-app.use(cors());
 
 redisSub.subscribe("vehicles", (message) => {
   console.log("Received vehicle update:", message);
@@ -43,4 +45,6 @@ redisSub.subscribe("vehicles", (message) => {
 });
 
 const PORT = 8002;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, "0.0.0.0", () =>
+  console.log(`Server running on port ${PORT}`)
+);
