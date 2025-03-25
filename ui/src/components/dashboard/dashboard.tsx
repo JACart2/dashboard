@@ -163,12 +163,12 @@ export default function Dashboard() {
         <Layout className={styles.dashboardContainer}>
             <Header>
                 <Flex justify="space-between" align="center">
-                    <h1 style={{ color: 'white' }}>JACart Dashboard</h1>
+                    <h1 style={{ color: 'white', whiteSpace: 'nowrap' }}>JACart Dashboard</h1>
                     <button onClick={addVehicle} className={styles.headerButton}>+ Add Vehicle</button>
                 </Flex>
             </Header>
             <Content>
-                <Flex className={styles.fillHeight}>
+                <Flex className={`${styles.fillHeight} ${styles.dashboardContent}`}>
                     <Flex className={styles.dashboardCards} vertical gap="middle" justify="flex-start">
                         {Object.values(carts).map((cart: Vehicle) => (
                             <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name}></TripInfoCard>

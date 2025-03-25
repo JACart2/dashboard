@@ -7,7 +7,7 @@
 }
 
 .dashboardContainer {
-    height: 100vh;
+    height: 100dvh;
 }
 
 .dashboardCards {
@@ -28,4 +28,18 @@
 
 #map {
     flex-grow: 1
+}
+
+@media screen and (max-width: 800px) {
+    .dashboardContent {
+        flex-direction: column;
+    }
+
+    .dashboardCards {
+        flex: 1;
+    }
+
+    #map {
+        flex: 1;
+    }
 }
