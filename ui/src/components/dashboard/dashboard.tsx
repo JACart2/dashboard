@@ -24,7 +24,6 @@ function generateRandomLetters(length: number): string {
     return randomLetters.join('');
 }
 
-
 export default function Dashboard() {
     const map = useRef<maplibregl.Map | null>(null)
     const mapRef = useRef<HTMLDivElement | null>(null)
