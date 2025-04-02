@@ -43,6 +43,11 @@ const CART_TOPICS = {
     name: "/clicked_point",
     messageType: "geometry_msgs/msg/PointStamped",
   },
+  compressed_image: {
+    name: "/zed/zed_node/rgb/image_rect_color/compressed",
+    messageType: "sensor_msgs/msg/CompressedImage",
+    throttle_rate: 100 // this can be changed based on bandwidth
+  }
 };
 
 // // ROSMarker[]
