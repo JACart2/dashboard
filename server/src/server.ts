@@ -7,13 +7,22 @@ import cors = require("cors");
 import { Server } from "socket.io";
 import path = require("path");
 import { redisSub } from "./config/db";
+import CameraSubManager from "./config/camera-subs";
 
 const app = express();
 const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: ["http://192.168.50.88:8002", "http://locahost:8002"],
+    origin: ["http://locahost:8000"],
+    methods: ["GET", "POST"],
+  },
+  transports: ["websocket", "polling"],
+});
+
+const cameraIo = new Server(server, {
+  cors: {
+    origin: ["http://locahost:8001"],
     methods: ["GET", "POST"],
   },
   transports: ["websocket", "polling"],
@@ -22,13 +31,27 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("New WebSocket connection:", socket.id);
 
-  socket.on("message", (msg) => {
-    console.log("Received message:", msg);
-    socket.emit("response", "Message received");
-  });
+  socket.on("message", (msg) => {});
 
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
+  });
+});
+
+cameraIo.on("connection", (socket) => {
+  console.log("Client subscribed to camera:", socket.id);
+
+  socket.on("subscribe", (cartName: string) => {
+    CameraSubManager.subscribe(cartName, socket);
+  });
+
+  socket.on("unsubscribe", (cartName: string) => {
+    CameraSubManager.unsubscribe(cartName, socket);
+  });
+
+  socket.on("disconnect", () => {
+    CameraSubManager.unsubscribeAll(socket);
+    console.log("Client unsubscribed from camera:", socket.id);
   });
 });
 

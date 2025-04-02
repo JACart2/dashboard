@@ -1,17 +1,18 @@
 import * as ROSLIB from "roslib";
+import CameraSubManager from "../../config/camera-subs";
 
 export default class ROSListener {
-  static listeners: { [key: number]: ROSListener } = {};
+  static listeners: { [name: string]: ROSListener } = {};
 
   url: string;
-  id: number;
+  name: string;
 
   ros: ROSLIB.Ros;
   topics: { [key: string]: ROSLIB.Topic };
 
-  constructor(url: string, id: number) {
+  constructor(url: string, name: string) {
     this.url = url;
-    this.id = id;
+    this.name = name;
 
     // Can hook up error/connection/close events for logging if desired
     this.ros = new ROSLIB.Ros({
@@ -28,10 +29,18 @@ export default class ROSListener {
 
     this.subscribeToTopics();
 
-    ROSListener.listeners[id] = this;
+    ROSListener.listeners[name] = this;
   }
 
-  subscribeToTopics(): void {}
+  subscribeToTopics(): void {
+    this.topics["compressed_image"].subscribe((message) => {
+      CameraSubManager.emitFrame(this.name, message.toString());
+    });
+  }
+
+  TESTemitFrame(data: string) {
+    CameraSubManager.emitFrame(this.name, data);
+  }
 }
 
 const CART_TOPICS = {
