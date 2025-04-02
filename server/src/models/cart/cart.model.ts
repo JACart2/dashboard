@@ -1,5 +1,4 @@
 const CartModel = Object.freeze({
-  id: "number",
   name: "string",
   speed: "number",
   tripProgress: "number",

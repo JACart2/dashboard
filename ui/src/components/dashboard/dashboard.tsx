@@ -30,11 +30,11 @@ export default function Dashboard() {
     const cartMarkers = useRef<{ [key: string]: Marker }>({})
     const [carts, setCarts] = useState<VehicleMap>({})
 
-    function updateCart(id: number, data: Vehicle) {
+    function updateCart(name: string, data: Vehicle) {
         setCarts(prevCarts => ({
             ...prevCarts,
-            [id]: {
-                ...prevCarts[id], // Merge existing cart data
+            [name]: {
+                ...prevCarts[name], // Merge existing cart data
                 ...data
             }
         }));
@@ -66,7 +66,7 @@ export default function Dashboard() {
 
     const vehicleSocketCallback = (data: any) => {
         console.log(data)
-        updateCart(data.id, data)
+        updateCart(data.name, data)
     }
 
     // This will be replaced with real data when everything is hooked up
@@ -101,14 +101,14 @@ export default function Dashboard() {
     function addMarker(cart: Vehicle) {
         if (cart.longLat == undefined || cart.longLat.length < 2) return
 
-        if (cartMarkers.current[cart.id] == undefined) {
+        if (cartMarkers.current[cart.name] == undefined) {
             const marker = new Marker()
                 .setLngLat([cart.longLat[0], cart.longLat[1]])
                 .addTo(map.current!);
 
-            cartMarkers.current[cart.id] = marker
+            cartMarkers.current[cart.name] = marker
         } else {
-            cartMarkers.current[cart.id].setLngLat([cart.longLat[0], cart.longLat[1]])
+            cartMarkers.current[cart.name].setLngLat([cart.longLat[0], cart.longLat[1]])
         }
 
 

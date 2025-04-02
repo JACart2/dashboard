@@ -13,17 +13,14 @@ vehicleRouter.get("/", async (req, res) => {
     return;
   }
 
-  keys = keys.filter((key) => !key.endsWith(":id"));
-
   const vehicles = await Promise.all(
     keys.map(async (key) => {
       try {
         const data = await redis.hGetAll(key);
-        const id = key.split(":").pop();
 
         const parsedData = Utils.parseData(data);
 
-        return { id: id, ...parsedData }; // Include the key as ID
+        return { ...parsedData }; // Include the key as ID
       } catch (err) {
         console.log(err.message);
       }
@@ -33,8 +30,8 @@ vehicleRouter.get("/", async (req, res) => {
   res.json(vehicles);
 });
 
-vehicleRouter.get("/:id/", async (req, res) => {
-  const item = await redis.hGetAll(`vehicle:${req.params.id}`);
+vehicleRouter.get("/:name/", async (req, res) => {
+  const item = await redis.hGetAll(`vehicle:${req.params.name}`);
 
   if (!item || Object.keys(item).length === 0) {
     res.status(404).json({ error: "Vehicle not found" });
@@ -45,9 +42,7 @@ vehicleRouter.get("/:id/", async (req, res) => {
 });
 
 vehicleRouter.post("/", async (req, res) => {
-  const id = await redis.incr("vehicle:id");
-
-  const result = CartUtils.updateCart(id, req.body);
+  const result = await CartUtils.updateCart(req.body.name, req.body);
 
   // Utils.updateCart(id, req.body);
 
@@ -57,11 +52,11 @@ vehicleRouter.post("/", async (req, res) => {
   //   JSON.stringify({ id: id, ...data.stringified })
   // );
 
-  res.json({ id: id, ...result });
+  res.json({ ...result });
 });
 
-vehicleRouter.put("/:id/", async (req, res) => {
-  const result = CartUtils.updateCart(req.params.id, req.body);
+vehicleRouter.put("/:name/", async (req, res) => {
+  const result = CartUtils.updateCart(req.params.name, req.body);
 
   res.json(result);
 });
@@ -75,13 +70,11 @@ vehicleRouter.post("/register/", async (req, res) => {
     return;
   }
 
-  let id = await CartUtils.getCartId(name);
-  if (id == undefined) {
-    id = await redis.incr("vehicle:id");
-    await CartUtils.updateCart(id, { name: name });
+  if (!redis.exists(`vehicle:${name}`)) {
+    await CartUtils.updateCart(name, { name: name });
   }
 
-  const rosListener = new ROSListener(url, id);
+  const rosListener = new ROSListener(url, name);
 
   res.json({ name, url });
 });

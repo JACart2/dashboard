@@ -65,22 +65,16 @@ export namespace Utils {
 }
 
 export namespace CartUtils {
-  export async function getCartId(name: string): Promise<number> {
-    const id = await redis.get(`vehicle:name:${name}`);
-
-    return parseInt(id);
-  }
-
-  export async function updateCart(id: string | number, data: JSONObject) {
-    if (typeof id !== "number") id = parseInt(id);
-
+  export async function updateCart(name: string, data: JSONObject) {
     const filtered = Utils.filterToModel(CartModel, data);
     const stringified = Utils.stringifyValues(filtered);
 
-    await redis.hSet(`vehicle:${id}`, stringified);
-    await redis.set(`vehicle:name:${filtered.name}`, id);
+    await redis.hSet(`vehicle:${name}`, stringified);
 
-    await redisPub.publish("vehicles", JSON.stringify({ id: id, ...filtered }));
+    await redisPub.publish(
+      "vehicles",
+      JSON.stringify({ name: name, ...filtered })
+    );
 
     return filtered;
   }

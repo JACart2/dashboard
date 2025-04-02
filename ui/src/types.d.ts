@@ -1,5 +1,4 @@
 export interface Vehicle {
-  id: number;
   name: string;
   speed?: number;
   tripProgress?: number;
@@ -9,5 +8,5 @@ export interface Vehicle {
 }
 
 export interface VehicleMap {
-  [key: number | string]: Vehicle;
+  [key: string]: Vehicle;
 }
