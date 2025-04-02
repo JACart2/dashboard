@@ -6,6 +6,7 @@ import ROSListener from "./ros";
 
 const vehicleRouter = Router();
 
+// Retrieve list of all currently registered carts
 vehicleRouter.get("/", async (req, res) => {
   let keys = await redis.keys("vehicle:*");
   if (keys.length === 0) {
@@ -13,6 +14,7 @@ vehicleRouter.get("/", async (req, res) => {
     return;
   }
 
+  // We need to JSON.parse() each cart property
   const vehicles = await Promise.all(
     keys.map(async (key) => {
       try {
@@ -20,7 +22,7 @@ vehicleRouter.get("/", async (req, res) => {
 
         const parsedData = Utils.parseData(data);
 
-        return { ...parsedData }; // Include the key as ID
+        return { ...parsedData };
       } catch (err) {
         console.log(err.message);
       }
@@ -30,6 +32,7 @@ vehicleRouter.get("/", async (req, res) => {
   res.json(vehicles);
 });
 
+// Retrieve cart by its name
 vehicleRouter.get("/:name/", async (req, res) => {
   const item = await redis.hGetAll(`vehicle:${req.params.name}`);
 
@@ -41,26 +44,21 @@ vehicleRouter.get("/:name/", async (req, res) => {
   res.json(item);
 });
 
+// Create new cart, using `name` as the key
 vehicleRouter.post("/", async (req, res) => {
   const result = await CartUtils.updateCart(req.body.name, req.body);
-
-  // Utils.updateCart(id, req.body);
-
-  // await redis.hSet(`vehicle:${id}`, data.object);
-  // await redisPub.publish(
-  //   "vehicles",
-  //   JSON.stringify({ id: id, ...data.stringified })
-  // );
 
   res.json({ ...result });
 });
 
+// Update a cart given its name
 vehicleRouter.put("/:name/", async (req, res) => {
   const result = CartUtils.updateCart(req.params.name, req.body);
 
   res.json(result);
 });
 
+// Create a ROSListener given a cart's ROS IP and listen for topics
 vehicleRouter.post("/register/", async (req, res) => {
   const url = req.body?.url;
   const name = req.body?.name;

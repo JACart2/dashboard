@@ -28,6 +28,7 @@ export namespace Utils {
     };
   }
 
+  // Filter out any keys not defined in the provided model
   export function filterToModel<T extends JSONObject>(
     model: Model<T>,
     data: JSONObject
@@ -43,6 +44,7 @@ export namespace Utils {
     return filtered;
   }
 
+  // Stringify each value in the provided object (Props in a Redis hash must be strings)
   export function stringifyValues(data: JSONObject) {
     const stringifiedData = {};
 
@@ -53,7 +55,8 @@ export namespace Utils {
     return stringifiedData;
   }
 
-  export function parseData(data: any) {
+  // Parse each value in the provided object
+  export function parseData(data: JSONObject) {
     const parsedData = {};
 
     Object.entries(data).forEach(([key, value]: [string, any]) => {
@@ -65,6 +68,7 @@ export namespace Utils {
 }
 
 export namespace CartUtils {
+  // Either create a new cart or update an existing cart given its name
   export async function updateCart(name: string, data: JSONObject) {
     const filtered = Utils.filterToModel(CartModel, data);
     const stringified = Utils.stringifyValues(filtered);
