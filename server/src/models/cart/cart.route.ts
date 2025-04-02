@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { redis, redisPub, redisSub } from "../../config/db";
 import CartModel from "./cart.model";
-import { Utils } from "../../config/utils";
+import { Utils, CartUtils } from "../../config/utils";
+import ROSListener from "./ros";
 
 const vehicleRouter = Router();
 
@@ -29,7 +30,7 @@ vehicleRouter.get("/", async (req, res) => {
     })
   );
 
-  res.send(vehicles);
+  res.json(vehicles);
 });
 
 vehicleRouter.get("/:id/", async (req, res) => {
@@ -40,33 +41,49 @@ vehicleRouter.get("/:id/", async (req, res) => {
     return;
   }
 
-  res.send(item);
+  res.json(item);
 });
 
 vehicleRouter.post("/", async (req, res) => {
   const id = await redis.incr("vehicle:id");
 
-  const data = Utils.stringifyModel(CartModel, req.body);
+  const result = CartUtils.updateCart(id, req.body);
 
-  await redis.hSet(`vehicle:${id}`, data.object);
-  await redisPub.publish(
-    "vehicles",
-    JSON.stringify({ id: id, ...data.stringified })
-  );
+  // Utils.updateCart(id, req.body);
 
-  res.send({ id: id, ...data.object });
+  // await redis.hSet(`vehicle:${id}`, data.object);
+  // await redisPub.publish(
+  //   "vehicles",
+  //   JSON.stringify({ id: id, ...data.stringified })
+  // );
+
+  res.json({ id: id, ...result });
 });
 
 vehicleRouter.put("/:id/", async (req, res) => {
-  const data = Utils.stringifyModel(CartModel, req.body);
+  const result = CartUtils.updateCart(req.params.id, req.body);
 
-  await redis.hSet(`vehicle:${req.params.id}`, data.object);
-  await redisPub.publish(
-    "vehicles",
-    JSON.stringify({ id: req.params.id, ...data.stringified })
-  );
+  res.json(result);
+});
 
-  res.send(data.object);
+vehicleRouter.post("/register/", async (req, res) => {
+  const url = req.body?.url;
+  const name = req.body?.name;
+
+  if (!url || !name) {
+    res.status(400).json({ error: "Name and URL are required" });
+    return;
+  }
+
+  let id = await CartUtils.getCartId(name);
+  if (id == undefined) {
+    id = await redis.incr("vehicle:id");
+    await CartUtils.updateCart(id, { name: name });
+  }
+
+  const rosListener = new ROSListener(url, id);
+
+  res.json({ name, url });
 });
 
 export default vehicleRouter;
