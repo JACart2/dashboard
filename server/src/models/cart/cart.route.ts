@@ -72,9 +72,10 @@ vehicleRouter.post("/register/", async (req, res) => {
 
   if (!redis.exists(`vehicle:${name}`)) {
     await CartUtils.updateCart(name, { name: name });
+    const rosListener = new ROSListener(url, name);
+  } else {
+    ROSListener.listeners[name] = new ROSListener(url, name);
   }
-
-  const rosListener = new ROSListener(url, name);
 
   res.json({ name, url });
 });
