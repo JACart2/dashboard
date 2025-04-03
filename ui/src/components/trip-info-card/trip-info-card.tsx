@@ -12,9 +12,10 @@ interface TripInfoProps {
     cart: Vehicle
     focusCartCallback?: (a: number[]) => void
     doesNavToRoot?: boolean
+    onClick: (arg0: Vehicle) => void;
 }
 
-export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot }: TripInfoProps) {
+export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, onClick }: TripInfoProps) {
     const navigate = useNavigate();
 
 
@@ -33,12 +34,6 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot }:
         focusCartCallback(cart.longLat);
     }
 
-    function navToRoot(): void {
-        if (doesNavToRoot) {
-            navigate('/');
-        }
-    }
-
     function getSpeedLabel() {
         return (<span style={{ fontSize: '14pt' }}>
             {cart.speed == undefined ? 'N/A' : `${Math.round(cart.speed * 100) / 100} mph`}
@@ -46,7 +41,7 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot }:
     }
 
     return (
-        <Card className={clsx(styles.tripInfoCard, { [styles.showHover]: doesNavToRoot })} onClick={() => navToRoot()} title={
+        <Card className={clsx(styles.tripInfoCard, { [styles.showHover]: doesNavToRoot })} onClick={() => onClick(cart)}title={
             // Card title (icon, name, locate button)
             <Flex className={styles.cardTitle} justify="space-between">
                 <Flex className={styles.cardTitle}><FaCarSide /> <span>{cart.name}</span></Flex>

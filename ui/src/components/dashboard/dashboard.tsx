@@ -9,6 +9,7 @@ import maplibregl, { Marker } from "maplibre-gl";
 import { vehicleSocket } from "../../services/vehicleSocket";
 import { vehicleService } from "../../services/vehicleService";
 import { Vehicle, VehicleMap } from "../../types";
+import golfCart from "../../assets/evenbettercart.jpg";
 
 const TripInfoCard = lazy(() => import("../trip-info-card/trip-info-card"));
 
@@ -69,26 +70,6 @@ export default function Dashboard() {
         updateCart(data.name, data)
     }
 
-    // This will be replaced with real data when everything is hooked up
-    // const cartsa = [
-    //     {
-    //         name: 'James',
-    //         speed: 3,
-    //         tripProgress: 75,
-    //         longLat: [-78.863156, 38.433347],
-    //         startLocation: 'Chesapeake Hall',
-    //         endLocation: 'Front of King Hall'
-    //     },
-    //     {
-    //         name: 'Madison',
-    //         speed: 6,
-    //         tripProgress: 20,
-    //         longLat: [-78.860981, 38.431957],
-    //         startLocation: 'E-Hall',
-    //         endLocation: 'Festival'
-    //     },
-    // ]
-
     function focusCart(longLat: number[]) {
         if (map.current == undefined) return
 
@@ -101,8 +82,21 @@ export default function Dashboard() {
     function addMarker(cart: Vehicle) {
         if (cart.longLat == undefined || cart.longLat.length < 2) return
 
+        const customMarker = document.createElement("div");
+        customMarker.style.width = "35px";
+        customMarker.style.height = "35px";
+        customMarker.style.background = "transparent"; 
+
+        // Create an image element inside the div
+        const image = document.createElement("img");
+        image.src = golfCart;
+        image.style.width = "100%";
+        image.style.height = "100%";
+    
+        customMarker.appendChild(image);
+        console.log("in here")
         if (cartMarkers.current[cart.name] == undefined) {
-            const marker = new Marker()
+            const marker = new Marker({element: customMarker})
                 .setLngLat([cart.longLat[0], cart.longLat[1]])
                 .addTo(map.current!);
 
@@ -111,8 +105,11 @@ export default function Dashboard() {
             cartMarkers.current[cart.name].setLngLat([cart.longLat[0], cart.longLat[1]])
         }
 
-
         // .setPopup(popup)
+    }
+
+    function handleModal(cart: Vehicle){
+        console.log(cart);
     }
 
     useEffect(() => {
@@ -120,6 +117,28 @@ export default function Dashboard() {
     }, [carts])
 
     useEffect(() => {
+        // this needs to change even
+        const vehicles: VehicleMap = {
+            "James": {
+                name: 'James',
+                speed: 3,
+                tripProgress: 75,
+                longLat: [-78.863156, 38.433347],
+                startLocation: 'Chesapeake Hall',
+                endLocation: 'Front of King Hall'
+            },
+            "Madison": {
+                name: 'Madison',
+                speed: 6,
+                tripProgress: 20,
+                longLat: [-78.860981, 38.431957],
+                startLocation: 'E-Hall',
+                endLocation: 'Festival'
+            },
+          };
+        
+        setCarts(vehicles)
+
         if (map.current != undefined || mapRef.current == undefined) return
 
         vehicleService.getVehicles().then((vehicles) => {
@@ -170,7 +189,7 @@ export default function Dashboard() {
                 <Flex className={`${styles.fillHeight} ${styles.dashboardContent}`}>
                     <Flex className={styles.dashboardCards} vertical gap="middle" justify="flex-start">
                         {Object.values(carts).map((cart: Vehicle) => (
-                            <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name}></TripInfoCard>
+                            <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name} onClick={(cart: Vehicle) => handleModal(cart)}></TripInfoCard>
                         ))}
                     </Flex>
                     <div ref={mapRef} id={styles.map}></div>
