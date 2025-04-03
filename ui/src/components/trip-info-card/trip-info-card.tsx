@@ -41,7 +41,7 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
     }
 
     return (
-        <Card className={clsx(styles.tripInfoCard, { [styles.showHover]: doesNavToRoot })} onClick={() => onClick(cart)}title={
+        <Card className={clsx(styles.tripInfoCard, { [styles.showHover]: doesNavToRoot })} onClick={() => onClick(cart)} title={
             // Card title (icon, name, locate button)
             <Flex className={styles.cardTitle} justify="space-between">
                 <Flex className={styles.cardTitle}><FaCarSide /> <span>{cart.name}</span></Flex>
@@ -68,7 +68,6 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
 
                 <Progress type="dashboard" percent={speedToPercent(cart.speed)} style={{ margin: '0 auto' }} status="normal"
                     format={() => getSpeedLabel()} />
-
             </Flex>
         </Card>
     );

@@ -76,6 +76,20 @@ export default function Dashboard() {
 
     }
 
+    function TESTshowCamera() {
+        let cart = carts[Object.keys(carts)[0]]; // just uses first cart in list for now
+        fetch('http://localhost:8002/api/vehicles/test-camera/' + cart.name).then(() => {
+            vehicleSocket.subscribeCamera(cart.name, (data: string) => {
+                // data is base64 image
+                console.log(data)
+            })
+        })
+    }
+
+    function TESThideCamera() {
+        vehicleSocket.unsubscribeCamera(carts[Object.keys(carts)[0]].name)
+    }
+
     const vehicleSocketCallback = (data: any) => {
         console.log(data)
         updateCart(data.name, data)
@@ -96,18 +110,18 @@ export default function Dashboard() {
         const customMarker = document.createElement("div");
         customMarker.style.width = "35px";
         customMarker.style.height = "35px";
-        customMarker.style.background = "transparent"; 
+        customMarker.style.background = "transparent";
 
         // Create an image element inside the div
         const image = document.createElement("img");
         image.src = golfCart;
         image.style.width = "100%";
         image.style.height = "100%";
-    
+
         customMarker.appendChild(image);
         console.log("in here")
         if (cartMarkers.current[cart.name] == undefined) {
-            const marker = new Marker({element: customMarker})
+            const marker = new Marker({ element: customMarker })
                 .setLngLat([cart.longLat[0], cart.longLat[1]])
                 .addTo(map.current!);
 
@@ -146,8 +160,8 @@ export default function Dashboard() {
                 startLocation: 'E-Hall',
                 endLocation: 'Festival'
             },
-          };
-        
+        };
+
         setCarts(vehicles)
 
         if (map.current != undefined || mapRef.current == undefined) return
@@ -193,6 +207,8 @@ export default function Dashboard() {
             <Header>
                 <Flex justify="space-between" align="center">
                     <h1 style={{ color: 'white', whiteSpace: 'nowrap' }}>JACart Dashboard</h1>
+                    <button onClick={TESTshowCamera} className={styles.headerButton}>Subscribe Camera</button>
+                    <button onClick={TESThideCamera} className={styles.headerButton}>Unsubscribe Camera</button>
                     <button onClick={addVehicle} className={styles.headerButton}>+ Add Vehicle</button>
                 </Flex>
             </Header>

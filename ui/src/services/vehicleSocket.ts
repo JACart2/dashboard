@@ -30,18 +30,3 @@ export const vehicleSocket = {
     socket.emit("unsubscribe-camera", cartName);
   },
 };
-
-export const cameraSocket = {
-  subscribe(cartName: string, callback: any) {
-    socket.emit("subscribe-camera", cartName);
-
-    socket.on("camera-update", (data: { name: string; data: string }) => {
-      if (data.name === cartName) {
-        callback(data.data);
-      }
-    });
-  },
-  unsubscribe(cartName: string) {
-    socket.emit("unsubscribe-camera", cartName);
-  },
-};
