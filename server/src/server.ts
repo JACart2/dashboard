@@ -14,15 +14,7 @@ const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: ["http://locahost:8000"],
-    methods: ["GET", "POST"],
-  },
-  transports: ["websocket", "polling"],
-});
-
-const cameraIo = new Server(server, {
-  cors: {
-    origin: ["http://locahost:8001"],
+    origin: ["http://locahost:8002"],
     methods: ["GET", "POST"],
   },
   transports: ["websocket", "polling"],
@@ -33,25 +25,16 @@ io.on("connection", (socket) => {
 
   socket.on("message", (msg) => {});
 
-  socket.on("disconnect", () => {
-    console.log("Client disconnected:", socket.id);
-  });
-});
-
-cameraIo.on("connection", (socket) => {
-  console.log("Client subscribed to camera:", socket.id);
-
-  socket.on("subscribe", (cartName: string) => {
+  socket.on("subscribe-camera", (cartName: string) => {
     CameraSubManager.subscribe(cartName, socket);
   });
 
-  socket.on("unsubscribe", (cartName: string) => {
+  socket.on("unsubscribe-camera", (cartName: string) => {
     CameraSubManager.unsubscribe(cartName, socket);
   });
 
   socket.on("disconnect", () => {
-    CameraSubManager.unsubscribeAll(socket);
-    console.log("Client unsubscribed from camera:", socket.id);
+    console.log("Client disconnected:", socket.id);
   });
 });
 
