@@ -12,9 +12,10 @@ interface TripInfoProps {
     cart: Vehicle
     focusCartCallback?: (a: number[]) => void
     doesNavToRoot?: boolean
+    img: string
 }
 
-export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot }: TripInfoProps) {
+export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, img }: TripInfoProps) {
     const navigate = useNavigate();
 
 
@@ -74,6 +75,7 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot }:
                 <Progress type="dashboard" percent={speedToPercent(cart.speed)} style={{ margin: '0 auto' }} status="normal"
                     format={() => getSpeedLabel()} />
 
+                <img src={img}></img>
             </Flex>
         </Card>
     );

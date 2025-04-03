@@ -6,7 +6,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { lazy, useEffect, useRef, useState } from "react";
 import { Protocol } from "pmtiles";
 import maplibregl, { Marker } from "maplibre-gl";
-import { vehicleSocket } from "../../services/vehicleSocket";
+import { vehicleSocket, cameraSocket } from "../../services/vehicleSocket";
 import { vehicleService } from "../../services/vehicleService";
 import { Vehicle, VehicleMap } from "../../types";
 
@@ -29,6 +29,7 @@ export default function Dashboard() {
     const mapRef = useRef<HTMLDivElement | null>(null)
     const cartMarkers = useRef<{ [key: string]: Marker }>({})
     const [carts, setCarts] = useState<VehicleMap>({})
+    const [randImg, setRandImg] = useState<any>({})
 
     function updateCart(name: string, data: Vehicle) {
         setCarts(prevCarts => ({
@@ -62,6 +63,21 @@ export default function Dashboard() {
             }),
         });
 
+    }
+
+    function TESTshowCamera() {
+        let cart = carts[Object.keys(carts)[0]];
+        cameraSocket.subscribe(cart.name, (data: string) => {
+            console.log(data)
+            setRandImg({
+                ...randImg,
+                [cart.name]: data
+            })
+        })
+    }
+
+    function TESThideCamera() {
+        cameraSocket.unsubscribe(carts[Object.keys(carts)[0]].name)
     }
 
     const vehicleSocketCallback = (data: any) => {
@@ -163,6 +179,8 @@ export default function Dashboard() {
             <Header>
                 <Flex justify="space-between" align="center">
                     <h1 style={{ color: 'white', whiteSpace: 'nowrap' }}>JACart Dashboard</h1>
+                    <button onClick={TESTshowCamera} className={styles.headerButton}>Show Camera</button>
+                    <button onClick={TESThideCamera} className={styles.headerButton}>Hide Camera</button>
                     <button onClick={addVehicle} className={styles.headerButton}>+ Add Vehicle</button>
                 </Flex>
             </Header>
@@ -170,7 +188,7 @@ export default function Dashboard() {
                 <Flex className={`${styles.fillHeight} ${styles.dashboardContent}`}>
                     <Flex className={styles.dashboardCards} vertical gap="middle" justify="flex-start">
                         {Object.values(carts).map((cart: Vehicle) => (
-                            <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name}></TripInfoCard>
+                            <TripInfoCard img={randImg[cart.name]} cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name}></TripInfoCard>
                         ))}
                     </Flex>
                     <div ref={mapRef} id={styles.map}></div>

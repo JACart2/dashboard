@@ -2,11 +2,13 @@ import { Socket } from "socket.io";
 
 export default class CameraSubManager {
   private static subscriptions: { [key: string]: Set<Socket> } = {};
+  static selected: string = "";
 
   static subscribe(cartName: string, socket: Socket) {
     if (!this.subscriptions[cartName]) this.subscriptions[cartName] = new Set();
 
     this.subscriptions[cartName].add(socket);
+    this.selected = cartName;
   }
 
   static unsubscribe(cartName: string, socket: Socket) {
@@ -33,5 +35,9 @@ export default class CameraSubManager {
     sockets.forEach((socket) => {
       socket.emit("camera-update", { name: cartName, data: data });
     });
+  }
+
+  static TESTgetCart() {
+    return this.selected;
   }
 }
