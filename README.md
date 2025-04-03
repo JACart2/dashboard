@@ -54,3 +54,14 @@ In order to confirm that you can see the topics, run `ros2 topic list` on both m
 ## Debugging
 If this doesn't work, potentially the firewall is to blame. Type `sudo ufw disable` to turn it off. Make sure to turn it back on afterwards.
 Make SURE you reset the daemon when checking for topics. `ros2 daemon stop` then `ros2 daemon start`
+
+# ZeroTier
+
+ZeroTier is a software-defined networking platform that allows you to create and manage secure, global, private networks, connecting devices as if they were on the same local area network (LAN), regardless of their physical location.
+
+ZeroTier account and network are under the JMU JACart gmail account.
+
+To add a new user, make sure zerotier is installed:
+`curl https://install.zerotier.com | sudo bash`
+then `sudo zerotier-cli join <NETWORK_ID>`
+You can find the network ID in the ZeroTier account.
