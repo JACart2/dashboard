@@ -5,6 +5,7 @@ export interface Vehicle {
   longLat?: [number, number];
   startLocation: string;
   endLocation: string;
+  cameraImage?: string;
 }
 
 export interface VehicleMap {
