@@ -32,15 +32,19 @@ export default function Dashboard() {
     const cartMarkers = useRef<{ [key: string]: Marker }>({})
     const [carts, setCarts] = useState<VehicleMap>({})
     const [isModalOpen, setIsModalOpen] = useState(false); // State for additional info modal
-
+    const [selectedCart, setSelectedCart] = useState<string>("");
     const showModal = () => {
         setIsModalOpen(true);
+        //FIXME maybe do a ref here or make it prettier
+        const img = document.getElementById("cart-video") as HTMLImageElement;
+        vehicleSocket.subscribeCamera(selectedCart, (data: string) => img.src = data);
     };
 
     const handleCancel = () => {
         setIsModalOpen(false);
+        vehicleSocket.unsubscribeCamera(selectedCart);
+        setSelectedCart("");
     };
-
 
     function updateCart(name: string, data: Vehicle) {
         setCarts(prevCarts => ({
@@ -134,6 +138,7 @@ export default function Dashboard() {
     }
 
     function handleModal(cart: Vehicle){
+        setSelectedCart(cart.name);
         showModal();
     }
 
@@ -231,8 +236,14 @@ export default function Dashboard() {
                                     left: '50%',
                                     transform: 'translate(-50%, -50%)',
                                     position: 'absolute',
+                                    height: "auto"
                                 }}
-                        /> 
+                        >
+                            <Flex>
+                                <h2>Cart live feed</h2>
+                                <img src={golfCart} id="cart-video"></img>
+                            </Flex>
+                        </Modal>
                     </div> 
 
                 </Flex>
