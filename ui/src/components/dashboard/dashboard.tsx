@@ -10,6 +10,7 @@ import { vehicleSocket } from "../../services/vehicleSocket";
 import { vehicleService } from "../../services/vehicleService";
 import { Vehicle, VehicleMap } from "../../types";
 import golfCart from "../../assets/evenbettercart.jpg";
+import { Modal } from "antd"
 
 const TripInfoCard = lazy(() => import("../trip-info-card/trip-info-card"));
 
@@ -30,6 +31,16 @@ export default function Dashboard() {
     const mapRef = useRef<HTMLDivElement | null>(null)
     const cartMarkers = useRef<{ [key: string]: Marker }>({})
     const [carts, setCarts] = useState<VehicleMap>({})
+    const [isModalOpen, setIsModalOpen] = useState(false); // State for additional info modal
+
+    const showModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleCancel = () => {
+        setIsModalOpen(false);
+    };
+
 
     function updateCart(name: string, data: Vehicle) {
         setCarts(prevCarts => ({
@@ -109,7 +120,7 @@ export default function Dashboard() {
     }
 
     function handleModal(cart: Vehicle){
-        console.log(cart);
+        showModal();
     }
 
     useEffect(() => {
@@ -192,9 +203,28 @@ export default function Dashboard() {
                             <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name} onClick={(cart: Vehicle) => handleModal(cart)}></TripInfoCard>
                         ))}
                     </Flex>
-                    <div ref={mapRef} id={styles.map}></div>
+                    <div ref={mapRef} id={styles.map} >
+                        <Modal
+                                title="In depth cart detail"
+                                open={isModalOpen}
+                                onCancel={handleCancel}
+                                width="50%"
+                                closable={false} 
+                                style={{
+                                    top: '50%',
+                                    left: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    position: 'absolute',
+                                }}
+                        /> 
+                    </div> 
+
                 </Flex>
+
             </Content>
         </Layout>
+
+
+
     )
 }
