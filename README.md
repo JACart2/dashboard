@@ -75,7 +75,7 @@ You should see something like:
 
 Also make sure ModemManager detects it:
 
-`nmcli -L`
+`mmcli -L`
 You should see something like:
 
 `Found 1 modems:
