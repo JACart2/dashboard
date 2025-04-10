@@ -1,5 +1,6 @@
 import * as ROSLIB from "roslib";
 import CameraSubManager from "../../config/camera-subs";
+import { CartUtils, Transform } from "../../config/utils";
 
 export default class ROSListener {
   static listeners: { [name: string]: ROSListener } = {};
@@ -35,6 +36,12 @@ export default class ROSListener {
   subscribeToTopics(): void {
     this.topics["compressed_image"].subscribe((message) => {
       CameraSubManager.emitFrame(this.name, message.toString());
+    });
+
+    this.topics["limited_pose"].subscribe((message: any) => {
+      const longLat = Transform.rosToMapCoords(message?.pose?.position);
+
+      CartUtils.editCart(this.name, { longLat });
     });
   }
 

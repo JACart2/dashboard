@@ -26,6 +26,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "helmet": "^8.0.0",
+    "ml-matrix": "^6.12.1",
     "redis": "^4.7.0",
     "roslib": "^1.4.1",
     "socket.io": "^4.8.1"

@@ -59,22 +59,36 @@ vehicleRouter.get("/:name/", async (req, res) => {
 
 // Create new cart, using `name` as the key
 vehicleRouter.post("/", async (req, res) => {
-  const result = await CartUtils.updateCart(req.body.name, req.body);
+  const result = await CartUtils.editCart(req.body.name, req.body);
 
   res.json({ ...result });
 });
 
 // Update a cart given its name
 vehicleRouter.put("/:name/", async (req, res) => {
-  const result = CartUtils.updateCart(req.params.name, req.body);
+  const result = CartUtils.editCart(req.params.name, req.body);
 
   res.json(result);
 });
 
 // Create a ROSListener given a cart's ROS IP and listen for topics
 vehicleRouter.post("/register/", async (req, res) => {
-  const url = req.body?.url;
+  console.log("Registration began");
+  let url = req.body?.url;
   const name = req.body?.name;
+
+  if (url == undefined && !!req.body?.port) {
+    let ip =
+      req.headers["x-forwarded-for"]?.toString().split(",")[0] ||
+      req.socket.remoteAddress;
+
+    if (ip?.startsWith("::ffff:")) {
+      ip = ip.replace("::ffff:", "");
+    }
+
+    url = ip + ":" + req.body.port;
+    console.log(url);
+  }
 
   if (!url || !name) {
     res.status(400).json({ error: "Name and URL are required" });
@@ -82,7 +96,7 @@ vehicleRouter.post("/register/", async (req, res) => {
   }
 
   if (!redis.exists(`vehicle:${name}`)) {
-    await CartUtils.updateCart(name, { name: name });
+    await CartUtils.editCart(name, { name: name });
     const rosListener = new ROSListener(url, name);
   } else {
     ROSListener.listeners[name] = new ROSListener(url, name);
