@@ -96,3 +96,7 @@ Wait a second, then it should be connected to the internet.
 Verify by pinging one of google's IP's:
 
 `ping -c 4 8.8.8.8`
+
+
+Errors:
+If it takes too long, try to open up the mobile broadband settings and turning it off and back on, then add the apn connection in the gui.
