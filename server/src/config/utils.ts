@@ -8,29 +8,11 @@ interface JSONObject {
   [key: string]: any;
 }
 
-type ModelType = Record<string, any>;
 type Model<T extends JSONObject> = {
   [K in keyof T]: T[K];
 };
 
 export namespace Utils {
-  export function filterAndStringify(model: any, data: JSONObject) {
-    const rawData = {};
-    const stringifiedData = {};
-
-    Object.entries(data).forEach(([key, value]: [string, any]) => {
-      if (key in model) {
-        rawData[key] = value;
-        stringifiedData[key] = JSON.stringify(value);
-      }
-    });
-
-    return {
-      object: rawData,
-      stringified: stringifiedData,
-    };
-  }
-
   // Filter out any keys not defined in the provided model
   export function filterToModel<T extends JSONObject>(
     model: Model<T>,
@@ -72,8 +54,13 @@ export namespace Utils {
 
 export namespace CartUtils {
   // Either create a new cart or update an existing cart given its name
-  export async function updateCart(name: string, data: JSONObject) {
+  export async function editCart(
+    name: string,
+    data: Partial<typeof CartModel>
+  ) {
     const filtered = Utils.filterToModel(CartModel, data);
+    if (Object.keys(filtered).length <= 0) return {};
+
     const stringified = Utils.stringifyValues(filtered);
 
     await redis.hSet(`vehicle:${name}`, stringified);

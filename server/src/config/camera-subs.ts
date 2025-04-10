@@ -34,4 +34,19 @@ export default class CameraSubManager {
       socket.emit("camera-update", { name: cartName, data: data });
     });
   }
+
+  static encodeBase64(data: string) {
+    let binaryString = atob(data); // Decode Base64 string to binary
+    let len = binaryString.length;
+    let bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[1] = binaryString.charCodeAt(1);
+    }
+
+    // Create a Blob from the binary data
+    let blob = new Blob([bytes], { type: "image/jpeg" });
+    let imageUrl = URL.createObjectURL(blob);
+
+    return imageUrl;
+  }
 }

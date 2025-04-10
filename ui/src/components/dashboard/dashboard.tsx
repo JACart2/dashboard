@@ -9,7 +9,6 @@ import maplibregl, { Marker } from "maplibre-gl";
 import { vehicleSocket } from "../../services/vehicleSocket";
 import { vehicleService } from "../../services/vehicleService";
 import { Vehicle, VehicleMap } from "../../types";
-import golfCart from "../../assets/evenbettercart.jpg";
 import { Modal } from "antd"
 
 const TripInfoCard = lazy(() => import("../trip-info-card/trip-info-card"));
@@ -32,12 +31,15 @@ export default function Dashboard() {
     const cartMarkers = useRef<{ [key: string]: Marker }>({})
     const [carts, setCarts] = useState<VehicleMap>({})
     const [isModalOpen, setIsModalOpen] = useState(false); // State for additional info modal
+    const [cartImage, setCartImage] = useState<string>('')
     const [selectedCart, setSelectedCart] = useState<string>("");
-    const showModal = () => {
+
+    const showModal = (cartName: string) => {
+        setSelectedCart(cartName)
         setIsModalOpen(true);
+
         //FIXME maybe do a ref here or make it prettier
-        const img = document.getElementById("cart-video") as HTMLImageElement;
-        vehicleSocket.subscribeCamera(selectedCart, (data: string) => img.src = data);
+        vehicleSocket.subscribeCamera(cartName, (data: string) => setCartImage(data));
     };
 
     const handleCancel = () => {
@@ -80,20 +82,6 @@ export default function Dashboard() {
 
     }
 
-    function TESTshowCamera() {
-        let cart = carts[Object.keys(carts)[0]]; // just uses first cart in list for now
-        fetch('http://localhost:8002/api/vehicles/test-camera/' + cart.name).then(() => {
-            vehicleSocket.subscribeCamera(cart.name, (data: string) => {
-                // data is base64 image
-                console.log(data)
-            })
-        })
-    }
-
-    function TESThideCamera() {
-        vehicleSocket.unsubscribeCamera(carts[Object.keys(carts)[0]].name)
-    }
-
     const vehicleSocketCallback = (data: any) => {
         console.log(data)
         updateCart(data.name, data)
@@ -118,12 +106,12 @@ export default function Dashboard() {
 
         // Create an image element inside the div
         const image = document.createElement("img");
-        image.src = golfCart;
+        image.src = '/images/golfcart.png';
         image.style.width = "100%";
         image.style.height = "100%";
+        image.style.background = 'transparent'
 
         customMarker.appendChild(image);
-        console.log("in here")
         if (cartMarkers.current[cart.name] == undefined) {
             const marker = new Marker({ element: customMarker })
                 .setLngLat([cart.longLat[0], cart.longLat[1]])
@@ -137,9 +125,10 @@ export default function Dashboard() {
         // .setPopup(popup)
     }
 
-    function handleModal(cart: Vehicle){
-        setSelectedCart(cart.name);
-        showModal();
+    function handleModal(cart: Vehicle) {
+        // setSelectedCart(cart.name);
+
+        showModal(cart.name);
     }
 
     useEffect(() => {
@@ -148,26 +137,26 @@ export default function Dashboard() {
 
     useEffect(() => {
         // this needs to change even
-        const vehicles: VehicleMap = {
-            "James": {
-                name: 'James',
-                speed: 3,
-                tripProgress: 75,
-                longLat: [-78.863156, 38.433347],
-                startLocation: 'Chesapeake Hall',
-                endLocation: 'Front of King Hall'
-            },
-            "Madison": {
-                name: 'Madison',
-                speed: 6,
-                tripProgress: 20,
-                longLat: [-78.860981, 38.431957],
-                startLocation: 'E-Hall',
-                endLocation: 'Festival'
-            },
-        };
+        // const vehicles: VehicleMap = {
+        //     "James": {
+        //         name: 'James',
+        //         speed: 3,
+        //         tripProgress: 75,
+        //         longLat: [-78.863156, 38.433347],
+        //         startLocation: 'Chesapeake Hall',
+        //         endLocation: 'Front of King Hall'
+        //     },
+        //     "Madison": {
+        //         name: 'Madison',
+        //         speed: 6,
+        //         tripProgress: 20,
+        //         longLat: [-78.860981, 38.431957],
+        //         startLocation: 'E-Hall',
+        //         endLocation: 'Festival'
+        //     },
+        // };
 
-        setCarts(vehicles)
+        // setCarts(vehicles)
 
         if (map.current != undefined || mapRef.current == undefined) return
 
@@ -212,8 +201,8 @@ export default function Dashboard() {
             <Header>
                 <Flex justify="space-between" align="center">
                     <h1 style={{ color: 'white', whiteSpace: 'nowrap' }}>JACart Dashboard</h1>
-                    <button onClick={TESTshowCamera} className={styles.headerButton}>Subscribe Camera</button>
-                    <button onClick={TESThideCamera} className={styles.headerButton}>Unsubscribe Camera</button>
+                    {/* <button onClick={TESTshowCamera} className={styles.headerButton}>Subscribe Camera</button>
+                    <button onClick={TESThideCamera} className={styles.headerButton}>Unsubscribe Camera</button> */}
                     <button onClick={addVehicle} className={styles.headerButton}>+ Add Vehicle</button>
                 </Flex>
             </Header>
@@ -226,25 +215,17 @@ export default function Dashboard() {
                     </Flex>
                     <div ref={mapRef} id={styles.map} >
                         <Modal
-                                title="In depth cart detail"
-                                open={isModalOpen}
-                                onCancel={handleCancel}
-                                width="50%"
-                                closable={false} 
-                                style={{
-                                    top: '50%',
-                                    left: '50%',
-                                    transform: 'translate(-50%, -50%)',
-                                    position: 'absolute',
-                                    height: "auto"
-                                }}
+                            title="Cart Details"
+                            open={isModalOpen}
+                            onCancel={handleCancel}
+                            closable={false}
+                            centered
                         >
-                            <Flex>
-                                <h2>Cart live feed</h2>
-                                <img src={golfCart} id="cart-video"></img>
+                            <Flex vertical align="center">
+                                <img style={{ width: '256px', aspectRatio: 1 }} src={cartImage}></img>
                             </Flex>
                         </Modal>
-                    </div> 
+                    </div>
 
                 </Flex>
 

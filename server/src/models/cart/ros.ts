@@ -35,7 +35,8 @@ export default class ROSListener {
 
   subscribeToTopics(): void {
     this.topics["compressed_image"].subscribe((message) => {
-      CameraSubManager.emitFrame(this.name, message.toString());
+      const url = CameraSubManager.encodeBase64(message?.["data"]);
+      CameraSubManager.emitFrame(this.name, url);
     });
 
     this.topics["limited_pose"].subscribe((message: any) => {
@@ -43,10 +44,6 @@ export default class ROSListener {
 
       CartUtils.editCart(this.name, { longLat });
     });
-  }
-
-  TESTemitFrame(data: string) {
-    CameraSubManager.emitFrame(this.name, data);
   }
 }
 
