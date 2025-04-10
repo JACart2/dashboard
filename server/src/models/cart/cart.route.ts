@@ -22,7 +22,7 @@ vehicleRouter.post("/register/", async (req, res) => {
       ip = ip.replace("::ffff:", "");
     }
 
-    url = ip + ":" + req.body.port;
+    url = `ws://${ip}:${req.body.port}`;
   }
 
   if (!url || !name) {

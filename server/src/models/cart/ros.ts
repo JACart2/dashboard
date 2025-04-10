@@ -20,6 +20,13 @@ export default class ROSListener {
       url: this.url,
     });
 
+    this.ros.on("error", (error) => {
+      console.error(
+        `[ROS] Connection error to ${this.url}:`,
+        error.message || error
+      );
+    });
+
     this.topics = {};
     Object.entries(CART_TOPICS).forEach(([topicName, options]) => {
       this.topics[topicName] = new ROSLIB.Topic({
