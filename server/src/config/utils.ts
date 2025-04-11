@@ -70,6 +70,8 @@ export namespace CartUtils {
       JSON.stringify({ name: name, ...filtered })
     );
 
+    console.log(`[REDIS] "${name}" modified:`, filtered);
+
     return filtered;
   }
 }

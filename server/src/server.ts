@@ -46,7 +46,7 @@ app.use("/api", routes);
 app.use(express.static(path.join(__dirname, "../static")));
 
 redisSub.subscribe("vehicles", (message) => {
-  console.log("Received vehicle update:", message);
+  console.log("[WS] Received vehicle update:", message);
   io.emit("vehicles", JSON.parse(message));
 });
 

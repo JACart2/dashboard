@@ -42,11 +42,14 @@ export default class ROSListener {
 
   subscribeToTopics(): void {
     this.topics["compressed_image"].subscribe((message) => {
+      // console.log(`[ROS] Received 'compressed_image':`, message)
+
       const url = CameraSubManager.encodeBase64(message?.["data"]);
       CameraSubManager.emitFrame(this.name, url);
     });
 
     this.topics["limited_pose"].subscribe((message: any) => {
+      console.log(`[ROS] Received 'limited_pose':`, message);
       const longLat = Transform.rosToMapCoords(message?.pose?.position);
 
       CartUtils.editCart(this.name, { longLat });
