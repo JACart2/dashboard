@@ -42,7 +42,7 @@ export default class ROSListener {
 
   subscribeToTopics(): void {
     this.topics["compressed_image"].subscribe((message) => {
-      // console.log(`[ROS] Received 'compressed_image':`, message)
+      console.log(`[ROS] Received 'compressed_image':`, message);
 
       const url = CameraSubManager.encodeBase64(message?.["data"]);
       CameraSubManager.emitFrame(this.name, url);
@@ -53,6 +53,18 @@ export default class ROSListener {
       const longLat = Transform.rosToMapCoords(message?.pose?.position);
 
       CartUtils.editCart(this.name, { longLat });
+    });
+
+    this.topics["visual_path"].subscribe((message: any) => {
+      console.log(`[ROS] Received 'visual_path':`, message);
+    });
+
+    this.topics["vehicle_state"].subscribe((message: any) => {
+      console.log(`[ROS] Received 'vehicle_state':`, message);
+    });
+
+    this.topics["clicked_point"].subscribe((message: any) => {
+      console.log(`[ROS] Received 'clicked_point':`, message);
     });
   }
 }
