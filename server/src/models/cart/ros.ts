@@ -69,6 +69,9 @@ export default class ROSListener {
 
     this.topics["zed_rear"].subscribe((message: any) => {
       console.log(`[ROS] Received 'zed_rear':`, message);
+
+      const url = CameraSubManager.encodeBase64(message?.["data"]);
+      CameraSubManager.emitFrame(this.name, url);
     });
   }
 }
