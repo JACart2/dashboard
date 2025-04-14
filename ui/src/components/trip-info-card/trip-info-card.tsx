@@ -3,7 +3,7 @@ import { Button, Card, Flex, Progress } from "antd";
 import clsx from "clsx";
 import React from "react";
 import { FaCarSide, FaLocationArrow, FaLocationCrosshairs, FaLocationDot, FaRightLong } from "react-icons/fa6";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 import styles from './trip-info-card.module.css'
 import { Vehicle } from "../../types";
@@ -16,7 +16,7 @@ interface TripInfoProps {
 }
 
 export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, onClick }: TripInfoProps) {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
 
     function speedToPercent(speed?: number) {

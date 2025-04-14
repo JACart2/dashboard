@@ -17,10 +17,10 @@ export const vehicleService = {
   },
 
   parseVehicles(vehicles: any): VehicleMap {
-    const parsed: { [key: number]: Vehicle } = {};
+    const parsed: { [key: string]: Vehicle } = {};
 
     vehicles.forEach((vehicle: Vehicle) => {
-      parsed[vehicle.id] = vehicle;
+      parsed[vehicle.name] = vehicle;
     });
 
     return parsed;

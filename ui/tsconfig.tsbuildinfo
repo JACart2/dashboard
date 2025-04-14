@@ -1,0 +1,1 @@
+{"root":["./src/types.d.ts","./src/components/dashboard/dashboard.tsx","./src/components/trip-info-card/trip-info-card.tsx","./src/services/vehicleservice.ts","./src/services/vehiclesocket.ts","./main.tsx","./globals.d.ts","./vite-env.d.ts"],"version":"5.8.2"}
