@@ -14,7 +14,7 @@ const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: ["http://172.28.71.175:8002", "http://localhost:8002"],
+    origin: '*',
     methods: ["GET", "POST"],
   },
   transports: ["websocket", "polling"],
