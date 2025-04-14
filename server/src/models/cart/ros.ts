@@ -66,6 +66,10 @@ export default class ROSListener {
     this.topics["clicked_point"].subscribe((message: any) => {
       console.log(`[ROS] Received 'clicked_point':`, message);
     });
+
+    this.topics["zed_rear"].subscribe((message: any) => {
+      console.log(`[ROS] Received 'zed_rear':`, message);
+    });
   }
 }
 
@@ -90,5 +94,9 @@ const CART_TOPICS = {
     name: "/zed/zed_node/rgb/image_rect_color/compressed",
     messageType: "sensor_msgs/msg/CompressedImage",
     throttle_rate: 100, // this can be changed based on bandwidth
+  },
+  zed_rear: {
+    name: "/zed_rear/zed_node/left_raw/image_raw_color",
+    messageType: "sensor_msgs/msg/Image",
   },
 };
