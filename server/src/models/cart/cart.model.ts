@@ -1,13 +1,11 @@
+// This syntax is awful - look into schema tools such as Zod
 const CartModel = Object.freeze({
-  id: "number",
-  name: "string",
-  speed: "number",
-  tripProgress: "number",
-  longLat: "object",
-  long: "number",
-  lat: "number",
-  startLocation: "string",
-  endLocation: "string",
+  name: null as string,
+  speed: null as number,
+  tripProgress: null as number,
+  longLat: null as number[],
+  startLocation: null as string,
+  endLocation: null as string,
 });
 
 export default CartModel;

@@ -9,6 +9,7 @@ import maplibregl, { Marker } from "maplibre-gl";
 import { vehicleSocket } from "../../services/vehicleSocket";
 import { vehicleService } from "../../services/vehicleService";
 import { Vehicle, VehicleMap } from "../../types";
+import { Modal } from "antd"
 
 const TripInfoCard = lazy(() => import("../trip-info-card/trip-info-card"));
 
@@ -24,18 +25,34 @@ function generateRandomLetters(length: number): string {
     return randomLetters.join('');
 }
 
-
 export default function Dashboard() {
     const map = useRef<maplibregl.Map | null>(null)
     const mapRef = useRef<HTMLDivElement | null>(null)
     const cartMarkers = useRef<{ [key: string]: Marker }>({})
     const [carts, setCarts] = useState<VehicleMap>({})
+    const [isModalOpen, setIsModalOpen] = useState(false); // State for additional info modal
+    const [cartImage, setCartImage] = useState<string>('')
+    const [selectedCart, setSelectedCart] = useState<string>("");
 
-    function updateCart(id: number, data: Vehicle) {
+    const showModal = (cartName: string) => {
+        setSelectedCart(cartName)
+        setIsModalOpen(true);
+
+        //FIXME maybe do a ref here or make it prettier
+        vehicleSocket.subscribeCamera(cartName, (data: string) => setCartImage(data));
+    };
+
+    const handleCancel = () => {
+        setIsModalOpen(false);
+        vehicleSocket.unsubscribeCamera(selectedCart);
+        setSelectedCart("");
+    };
+
+    function updateCart(name: string, data: Vehicle) {
         setCarts(prevCarts => ({
             ...prevCarts,
-            [id]: {
-                ...prevCarts[id], // Merge existing cart data
+            [name]: {
+                ...prevCarts[name], // Merge existing cart data
                 ...data
             }
         }));
@@ -67,28 +84,8 @@ export default function Dashboard() {
 
     const vehicleSocketCallback = (data: any) => {
         console.log(data)
-        updateCart(data.id, data)
+        updateCart(data.name, data)
     }
-
-    // This will be replaced with real data when everything is hooked up
-    // const cartsa = [
-    //     {
-    //         name: 'James',
-    //         speed: 3,
-    //         tripProgress: 75,
-    //         longLat: [-78.863156, 38.433347],
-    //         startLocation: 'Chesapeake Hall',
-    //         endLocation: 'Front of King Hall'
-    //     },
-    //     {
-    //         name: 'Madison',
-    //         speed: 6,
-    //         tripProgress: 20,
-    //         longLat: [-78.860981, 38.431957],
-    //         startLocation: 'E-Hall',
-    //         endLocation: 'Festival'
-    //     },
-    // ]
 
     function focusCart(longLat: number[]) {
         if (map.current == undefined) return
@@ -102,18 +99,36 @@ export default function Dashboard() {
     function addMarker(cart: Vehicle) {
         if (cart.longLat == undefined || cart.longLat.length < 2) return
 
-        if (cartMarkers.current[cart.id] == undefined) {
-            const marker = new Marker()
+        const customMarker = document.createElement("div");
+        customMarker.style.width = "35px";
+        customMarker.style.height = "35px";
+        customMarker.style.background = "transparent";
+
+        // Create an image element inside the div
+        const image = document.createElement("img");
+        image.src = '/images/golfcart.png';
+        image.style.width = "100%";
+        image.style.height = "100%";
+        image.style.background = 'transparent'
+
+        customMarker.appendChild(image);
+        if (cartMarkers.current[cart.name] == undefined) {
+            const marker = new Marker({ element: customMarker })
                 .setLngLat([cart.longLat[0], cart.longLat[1]])
                 .addTo(map.current!);
 
-            cartMarkers.current[cart.id] = marker
+            cartMarkers.current[cart.name] = marker
         } else {
-            cartMarkers.current[cart.id].setLngLat([cart.longLat[0], cart.longLat[1]])
+            cartMarkers.current[cart.name].setLngLat([cart.longLat[0], cart.longLat[1]])
         }
 
-
         // .setPopup(popup)
+    }
+
+    function handleModal(cart: Vehicle) {
+        // setSelectedCart(cart.name);
+
+        showModal(cart.name);
     }
 
     useEffect(() => {
@@ -121,6 +136,28 @@ export default function Dashboard() {
     }, [carts])
 
     useEffect(() => {
+        // this needs to change even
+        // const vehicles: VehicleMap = {
+        //     "James": {
+        //         name: 'James',
+        //         speed: 3,
+        //         tripProgress: 75,
+        //         longLat: [-78.863156, 38.433347],
+        //         startLocation: 'Chesapeake Hall',
+        //         endLocation: 'Front of King Hall'
+        //     },
+        //     "Madison": {
+        //         name: 'Madison',
+        //         speed: 6,
+        //         tripProgress: 20,
+        //         longLat: [-78.860981, 38.431957],
+        //         startLocation: 'E-Hall',
+        //         endLocation: 'Festival'
+        //     },
+        // };
+
+        // setCarts(vehicles)
+
         if (map.current != undefined || mapRef.current == undefined) return
 
         vehicleService.getVehicles().then((vehicles) => {
@@ -164,6 +201,8 @@ export default function Dashboard() {
             <Header>
                 <Flex justify="space-between" align="center">
                     <h1 style={{ color: 'white', whiteSpace: 'nowrap' }}>JACart Dashboard</h1>
+                    {/* <button onClick={TESTshowCamera} className={styles.headerButton}>Subscribe Camera</button>
+                    <button onClick={TESThideCamera} className={styles.headerButton}>Unsubscribe Camera</button> */}
                     <button onClick={addVehicle} className={styles.headerButton}>+ Add Vehicle</button>
                 </Flex>
             </Header>
@@ -171,12 +210,29 @@ export default function Dashboard() {
                 <Flex className={`${styles.fillHeight} ${styles.dashboardContent}`}>
                     <Flex className={styles.dashboardCards} vertical gap="middle" justify="flex-start">
                         {Object.values(carts).map((cart: Vehicle) => (
-                            <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name}></TripInfoCard>
+                            <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name} onClick={(cart: Vehicle) => handleModal(cart)}></TripInfoCard>
                         ))}
                     </Flex>
-                    <div ref={mapRef} id={styles.map}></div>
+                    <div ref={mapRef} id={styles.map} >
+                        <Modal
+                            title="Cart Details"
+                            open={isModalOpen}
+                            onCancel={handleCancel}
+                            closable={false}
+                            centered
+                        >
+                            <Flex vertical align="center">
+                                <img style={{ width: '256px', aspectRatio: 1 }} src={cartImage}></img>
+                            </Flex>
+                        </Modal>
+                    </div>
+
                 </Flex>
+
             </Content>
         </Layout>
+
+
+
     )
 }

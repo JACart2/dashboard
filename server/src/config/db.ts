@@ -7,7 +7,7 @@ const redisSub = createClient();
 redisPub.connect();
 redisSub.connect();
 
-redis.on("error", (err) => console.log("Redis Client Error", err));
+redis.on("error", (err) => console.log("Redis Client Error", err, "\n"));
 redis.connect();
 
 export { redis, redisPub, redisSub };

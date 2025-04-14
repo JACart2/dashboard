@@ -54,3 +54,49 @@ In order to confirm that you can see the topics, run `ros2 topic list` on both m
 ## Debugging
 If this doesn't work, potentially the firewall is to blame. Type `sudo ufw disable` to turn it off. Make sure to turn it back on afterwards.
 Make SURE you reset the daemon when checking for topics. `ros2 daemon stop` then `ros2 daemon start`
+
+# ZeroTier
+
+ZeroTier is a software-defined networking platform that allows you to create and manage secure, global, private networks, connecting devices as if they were on the same local area network (LAN), regardless of their physical location.
+
+ZeroTier account and network are under the JMU JACart gmail account.
+
+To add a new user, make sure zerotier is installed:
+`curl https://install.zerotier.com | sudo bash`
+then `sudo zerotier-cli join <NETWORK_ID>`
+You can find the network ID in the ZeroTier account.
+
+# Soracom ONYX + IoT SIM Card
+To get the Soracom ONYX adapter/modem working with the IoT SIM card, you need to insert the SIM into the onyx. After inserted, plug the ONYX into the laptop. Wait a bit. It should start blinking blue. Open up a terminal and confirm that the ONYX can be seen:
+`lsusb`
+
+You should see something like:
+`Bus 002 Device 004: ID 2c7c:0125 Quectel Wireless Solutions Co., Ltd.`
+
+Also make sure ModemManager detects it:
+
+`mmcli -L`
+You should see something like:
+
+`Found 1 modems:
+  /org/freedesktop/ModemManager1/Modem/0 [Quectel] EC25`
+
+In this case, it is modem 0.
+You can get detailed modem info with:
+
+`nmcli -m 0`
+
+Now create the connection (ONLY NEEDS TO BE DONE ONCE)
+
+`nmcli con add type gsm ifname "*" con-name cellular1 apn <Access point name here>`
+
+`nmcli con up cellular1`
+
+Wait a second, then it should be connected to the internet.
+Verify by pinging one of google's IP's:
+
+`ping -c 4 8.8.8.8`
+
+
+Errors:
+If it takes too long, try to open up the mobile broadband settings and turning it off and back on, then add the apn connection in the gui.
