@@ -36,7 +36,7 @@ export default class CameraSubManager {
   }
 
   static encodeBase64(data: string) {
-    console.log("[CAM] Raw image data: ", data);
+    // console.log("[CAM] Raw image data: ", data);
 
     // let binaryString = atob(data); // Decode Base64 string to binary
     // let len = binaryString.length;
@@ -51,7 +51,7 @@ export default class CameraSubManager {
 
     let blob = "data:image/jpeg;base64," + data;
 
-    console.log("[CAM] Image blob: ", blob);
+    // console.log("[CAM] Image blob: ", blob);
 
     return blob;
   }

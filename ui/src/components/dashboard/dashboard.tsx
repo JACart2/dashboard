@@ -121,7 +121,6 @@ export default function Dashboard() {
         } else {
             cartMarkers.current[cart.name].setLngLat([cart.longLat[0], cart.longLat[1]])
         }
-
         // .setPopup(popup)
     }
 
