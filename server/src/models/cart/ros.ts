@@ -68,7 +68,7 @@ export default class ROSListener {
     });
 
     this.topics["zed_rear"].subscribe((message: any) => {
-      // console.log(`[ROS] Received 'zed_rear':`, message);
+      console.log(`[ROS] Received 'zed_rear':`, message);
 
       const url = CameraSubManager.encodeBase64(message?.["data"]);
       CameraSubManager.emitFrame(this.name, url);
@@ -106,7 +106,7 @@ const CART_TOPICS = {
     throttle_rate: 100, // this can be changed based on bandwidth
   },
   zed_rear: {
-    name: "/zed_rear/zed_node_1/left_raw/image_raw_color",
+    name: "/zed_rear/zed_node/left_raw/image_raw_color",
     messageType: "sensor_msgs/msg/Image",
   },
   nav_cmd: {
