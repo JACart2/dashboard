@@ -101,7 +101,7 @@ const CART_TOPICS = {
     messageType: "geometry_msgs/msg/PointStamped",
   },
   compressed_image: {
-    name: "/zed/zed_node/rgb/image_rect_color/compressed",
+    name: "/zed_rear/zed_node/right_raw/image_raw_color/compressed",
     messageType: "sensor_msgs/msg/CompressedImage",
     throttle_rate: 100, // this can be changed based on bandwidth
   },
