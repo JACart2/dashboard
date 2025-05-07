@@ -95,6 +95,7 @@ const CART_TOPICS = {
   vehicle_state: {
     name: "/vehicle_state",
     messageType: "navigation_interface/msg/VehicleState",
+    throttle_rate: 500, // this can be changed based on bandwidth
   },
   clicked_point: {
     name: "/clicked_point",
@@ -103,7 +104,7 @@ const CART_TOPICS = {
   compressed_image: {
     name: "/zed_front/zed_node_0/right_raw/image_raw_color/compressed",
     messageType: "sensor_msgs/msg/CompressedImage",
-    throttle_rate: 100, // this can be changed based on bandwidth
+    throttle_rate: 1000, // this can be changed based on bandwidth
   },
   zed_rear: {
     name: "/zed/zed_node/rgb/image_raw_color/compressed",
@@ -112,5 +113,7 @@ const CART_TOPICS = {
   nav_cmd: {
     name: "/nav_cmd",
     messageType: "motor_control_interface/msg/VelAngle",
+    throttle_rate: 500, // this can be changed based on bandwidth
+
   },
 };
