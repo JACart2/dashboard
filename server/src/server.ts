@@ -14,7 +14,7 @@ const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: ["*", "http://localhost:8002"],
+    origin: ["*", "http://localhost:8000"],
     methods: ["GET", "POST"],
   },
   transports: ["websocket", "polling"],
@@ -50,7 +50,7 @@ redisSub.subscribe("vehicles", (message) => {
   io.emit("vehicles", JSON.parse(message));
 });
 
-const PORT = 8002;
+const PORT = 8000;
 server.listen(PORT, "0.0.0.0", () =>
   console.log(`Server running on port ${PORT} \n`)
 );
