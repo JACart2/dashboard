@@ -64,7 +64,7 @@ export default function Dashboard() {
             (Math.random() * 0.004) + 38.43
         ]
 
-        fetch("http://52.91.226.132:8000/api/vehicles", {
+        fetch("http://35.153.174.48:8000/api/vehicles", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
