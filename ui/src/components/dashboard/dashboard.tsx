@@ -65,7 +65,7 @@ export default function Dashboard() {
             return carts;
         });
 
-        removeMarker(name);
+        // removeMarker(name);
     }
 
     function addVehicle() {
@@ -93,7 +93,7 @@ export default function Dashboard() {
     }
 
     const vehicleSocketCallback = (res: any) => {
-        console.log(res)
+        console.log("Update: ", res)
         if (res.deleted) {
             deleteCart(res.name);
         } else {
@@ -151,8 +151,20 @@ export default function Dashboard() {
         showModal(cart.name);
     }
 
+    // Add or delete markers when carts list changes
     useEffect(() => {
-        Object.values(carts).forEach(cart => addMarker(cart))
+        const cartNames = new Set<string>();
+
+        // Add or update markers for each cart in list
+        Object.values(carts).forEach(cart => {
+            addMarker(cart)
+            cartNames.add(cart.name)
+        })
+
+        // Remove any markers whose cooresponding carts are no longer in the list
+        Object.keys(cartMarkers.current).forEach(marker => {
+            if (!cartNames.has(marker)) removeMarker(marker);
+        })
     }, [carts])
 
     useEffect(() => {
@@ -181,7 +193,7 @@ export default function Dashboard() {
         if (map.current != undefined || mapRef.current == undefined) return
 
         vehicleService.getVehicles().then((vehicles) => {
-            console.log(vehicles);
+            console.log("Vehicles: ", vehicles);
             setCarts(vehicles as VehicleMap)
         })
         vehicleSocket.subscribe(vehicleSocketCallback);
@@ -199,17 +211,6 @@ export default function Dashboard() {
         map.current.addControl(nav, "top-left");
 
         // const locationPins: Marker[] = [];
-
-        map.current.on("load", async () => {
-            if (map.current == undefined) return
-
-            cartMarkers.current = {}
-
-            Object.values(carts).forEach(cart => {
-                addMarker(cart)
-            })
-        });
-
 
         return () => {
             vehicleSocket.unsubscribe(vehicleSocketCallback); // Cleanup on unmount
