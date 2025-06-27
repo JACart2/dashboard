@@ -67,12 +67,25 @@ export namespace CartUtils {
 
     await redisPub.publish(
       "vehicles",
-      JSON.stringify({ name: name, ...filtered })
+      JSON.stringify({ name: name, data: filtered })
     );
 
     console.log(`[REDIS] "${name}" modified:`, filtered);
 
     return filtered;
+  }
+
+  export async function deleteCart(name: string) {
+    await redis.del(`vehicle:${name}`);
+
+    await redisPub.publish(
+      "vehicles",
+      JSON.stringify({ name: name, deleted: true })
+    );
+
+    console.log(`[REDIS] "${name}" deleted`);
+
+    return;
   }
 }
 

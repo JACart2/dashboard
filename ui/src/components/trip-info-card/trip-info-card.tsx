@@ -2,11 +2,12 @@
 import { Button, Card, Flex, Progress } from "antd";
 import clsx from "clsx";
 import React from "react";
-import { FaCarSide, FaLocationArrow, FaLocationCrosshairs, FaLocationDot, FaRightLong } from "react-icons/fa6";
+import { FaCarSide, FaLocationArrow, FaLocationCrosshairs, FaLocationDot, FaRightLong, FaTrash } from "react-icons/fa6";
 // import { useNavigate } from "react-router-dom";
 
 import styles from './trip-info-card.module.css'
 import { Vehicle } from "../../types";
+import { vehicleService } from "../../services/vehicleService";
 
 interface TripInfoProps {
     cart: Vehicle
@@ -40,14 +41,27 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
         </span>)
     }
 
+    function deleteCart(e: React.MouseEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        return vehicleService.deleteVehicle(cart.name);
+    }
+
     return (
         <Card className={clsx(styles.tripInfoCard, { [styles.showHover]: doesNavToRoot })} onClick={() => onClick(cart)} title={
             // Card title (icon, name, locate button)
             <Flex className={styles.cardTitle} justify="space-between">
                 <Flex className={styles.cardTitle}><FaCarSide /> <span>{cart.name}</span></Flex>
-                {!!cart.longLat &&
-                    <Button className={styles.cartLocateButton} onClick={($event) => emitFocusCart($event)} icon={<FaLocationCrosshairs />} shape="circle"></Button>
-                }
+
+                <Flex gap="8px">
+                    {!!cart.longLat &&
+                        <Button className={styles.cardTitleButton} onClick={($event) => emitFocusCart($event)} icon={<FaLocationCrosshairs />} shape="circle"></Button>
+                    }
+
+                    { /* Delete button may not be needed once carts are auto removed after inactivity, but still useful for now while under development */}
+                    <Button className={styles.cardTitleButton} onClick={($event) => deleteCart($event)} icon={<FaTrash />} variant="filled" danger shape="circle"></Button>
+                </Flex>
             </Flex>
         }>
             <Flex vertical gap="large">

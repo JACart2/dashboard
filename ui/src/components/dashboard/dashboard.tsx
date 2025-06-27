@@ -58,6 +58,16 @@ export default function Dashboard() {
         }));
     }
 
+    function deleteCart(name: string) {
+        setCarts(prevCarts => {
+            const carts = { ...prevCarts };
+            delete carts[name];
+            return carts;
+        });
+
+        removeMarker(name);
+    }
+
     function addVehicle() {
         let longLat = [
             (Math.random() * 0.004) - 78.86,
@@ -82,9 +92,13 @@ export default function Dashboard() {
 
     }
 
-    const vehicleSocketCallback = (data: any) => {
-        console.log(data)
-        updateCart(data.name, data)
+    const vehicleSocketCallback = (res: any) => {
+        console.log(res)
+        if (res.deleted) {
+            deleteCart(res.name);
+        } else {
+            updateCart(res.name, res.data)
+        }
     }
 
     function focusCart(longLat: number[]) {
@@ -99,6 +113,12 @@ export default function Dashboard() {
     function addMarker(cart: Vehicle) {
         if (cart.longLat == undefined || cart.longLat.length < 2) return
 
+        // Update existing marker if one exists
+        if (!!cartMarkers.current[cart.name]) {
+            cartMarkers.current[cart.name].setLngLat([cart.longLat[0], cart.longLat[1]]);
+            return;
+        }
+
         const customMarker = document.createElement("div");
         customMarker.style.width = "35px";
         customMarker.style.height = "35px";
@@ -109,19 +129,20 @@ export default function Dashboard() {
         image.src = '/images/golfcart.png';
         image.style.width = "100%";
         image.style.height = "100%";
-        image.style.background = 'transparent'
+        image.style.background = 'transparent';
 
         customMarker.appendChild(image);
-        if (cartMarkers.current[cart.name] == undefined) {
-            const marker = new Marker({ element: customMarker })
-                .setLngLat([cart.longLat[0], cart.longLat[1]])
-                .addTo(map.current!);
 
-            cartMarkers.current[cart.name] = marker
-        } else {
-            cartMarkers.current[cart.name].setLngLat([cart.longLat[0], cart.longLat[1]])
-        }
-        // .setPopup(popup)
+        const marker = new Marker({ element: customMarker })
+            .setLngLat([cart.longLat[0], cart.longLat[1]])
+            .addTo(map.current!);
+
+        cartMarkers.current[cart.name] = marker;
+    }
+
+    function removeMarker(name: string) {
+        cartMarkers.current[name].remove();
+        delete cartMarkers.current[name];
     }
 
     function handleModal(cart: Vehicle) {

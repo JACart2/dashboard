@@ -94,4 +94,11 @@ vehicleRouter.put("/:name/", async (req, res) => {
   res.json(result);
 });
 
+// Update a cart given its name
+vehicleRouter.delete("/:name/", async (req, res) => {
+  const result = CartUtils.deleteCart(req.params.name);
+
+  res.json(result);
+});
+
 export default vehicleRouter;

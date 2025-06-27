@@ -4,4 +4,4 @@ server/dist
 server/static
 
 ui/dist
-.env
+**/.env
