@@ -3,7 +3,7 @@ import { Vehicle, VehicleMap } from "../types";
 const API_ROOT = import.meta.env.VITE_API_ROOT;
 
 export const vehicleService = {
-  BASE_URL: API_ROOT + "vehicles",
+  BASE_URL: API_ROOT + "vehicles/",
   vehicles: null as VehicleMap | null,
 
   async getVehicles(ignoreCache: boolean = false): Promise<VehicleMap> {
@@ -26,7 +26,11 @@ export const vehicleService = {
     return parsed;
   },
 
-  getVehicle(id: number) {
-    return fetch(this.BASE_URL + id, { method: "GET" });
+  getVehicle(name: string) {
+    return fetch(this.BASE_URL + name, { method: "GET" });
+  },
+
+  deleteVehicle(name: string) {
+    return fetch(this.BASE_URL + name, { method: "DELETE" });
   },
 };
