@@ -1,7 +1,9 @@
 import io from "socket.io-client";
 
 const SOCKET_SERVER =
-  import.meta.env.VITE_SOCKET_SERVER || "http://localhost:8002";
+  import.meta.env.VITE_SOCKET_SERVER || "http://localhost:8000";
+
+console.log(SOCKET_SERVER);
 
 const socket = io(SOCKET_SERVER, { transports: ["websocket"] });
 
