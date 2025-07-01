@@ -1,7 +1,6 @@
 import { useAuth } from "react-oidc-context";
-import { Navigate } from "react-router-dom";
 
-export default function AunthenticatedRoute({ children }) {
+export default function AunthenticatedRoute({ children }: React.PropsWithChildren<{}>) {
 	const auth = useAuth();
 
 	if (auth.isLoading) return <div>Loading...</div>;
