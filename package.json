@@ -1,0 +1,5 @@
+{
+	"dependencies": {
+		"react-oidc-context": "^3.3.0"
+	}
+}
