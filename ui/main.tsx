@@ -11,6 +11,9 @@ const cognitoAuthConfig = {
     redirect_uri: "https://35.153.174.48/",
     response_type: "code",
     scope: "phone openid email",
+    onSigninCallback: () => {
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
 };
 
 const router = createBrowserRouter(
