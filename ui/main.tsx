@@ -1,6 +1,6 @@
 import ReactDOM from "react-dom/client";
 import Dashboard from "./src/components/dashboard/dashboard";
-import AunthenticatedRoute from "./src/components/authenticated-route/authenticated-route";
+import AuthenticatedRoute from "./src/components/authenticated-route/authenticated-route";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import React from "react";
 import { AuthProvider } from "react-oidc-context";
@@ -20,9 +20,9 @@ const router = createBrowserRouter(
     [
         {
             path: "/",
-            element: <AunthenticatedRoute>
+            element: <AuthenticatedRoute>
                 <Dashboard />
-            </AunthenticatedRoute>,
+            </AuthenticatedRoute>,
         },
     ]
 );

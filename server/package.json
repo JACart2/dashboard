@@ -7,6 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "concurrently \"redis6-server redis.conf\" \"npm run serve\"",
     "dev": "concurrently \"redis6-server redis.conf\" \"npm run serve:watch\"",
+    "dev:osx": "concurrently \"redis-server redis.conf\" \"npm run serve:watch\"",
     "dev:windows": "concurrently \"memurai-cli flushdb\" \"memurai-cli CONFIG SET appendonly no save \"\"\" \"npm run serve:watch\" ",
     "serve": "tsx src/server.ts",
     "serve:watch": "tsx watch src/server.ts"

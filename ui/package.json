@@ -7,7 +7,7 @@
   "scripts": {
     "predeploy": "pnpm run build",
     "deploy": "gh-pages -d dist",
-    "dev": "vite",
+    "dev": "vite  build --watch --mode dev",
     "build": "tsc -b && vite build --emptyOutDir",
     "build:watch": "vite build --watch",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

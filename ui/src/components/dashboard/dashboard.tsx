@@ -13,18 +13,6 @@ import { Modal } from "antd"
 
 const TripInfoCard = lazy(() => import("../trip-info-card/trip-info-card"));
 
-function generateRandomLetters(length: number): string {
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-    const randomLetters = [];
-
-    for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * letters.length);
-        randomLetters.push(letters[randomIndex]);
-    }
-
-    return randomLetters.join('');
-}
-
 export default function Dashboard() {
     const map = useRef<maplibregl.Map | null>(null)
     const mapRef = useRef<HTMLDivElement | null>(null)
@@ -68,30 +56,6 @@ export default function Dashboard() {
         // removeMarker(name);
     }
 
-    function addVehicle() {
-        let longLat = [
-            (Math.random() * 0.004) - 78.86,
-            (Math.random() * 0.004) + 38.43
-        ]
-
-        fetch("https://35.153.174.48/api/vehicles", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                name: generateRandomLetters(8),
-                speed: Math.random() * 8,
-                // long: (Math.random() * 0.004) - 78.86,
-                // lat: (Math.random() * 0.004) + 38.43,
-                longLat: longLat,
-                startLocation: "Starting point",
-                endLocation: "Ending point",
-            }),
-        });
-
-    }
-
     const vehicleSocketCallback = (res: any) => {
         console.log("Update: ", res)
         if (res.deleted) {
@@ -108,6 +72,10 @@ export default function Dashboard() {
             center: [longLat[0], longLat[1]],
             zoom: 17,
         });
+    }
+
+    function addVehicle() {
+        vehicleService.createTestVehicle();
     }
 
     function addMarker(cart: Vehicle) {
