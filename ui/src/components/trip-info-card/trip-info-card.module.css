@@ -5,6 +5,7 @@
     outline: 2px solid transparent;
     transition: all 0.2s;
     height: fit-content;
+    position: relative;
 }
 
 .tripInfoCard.showHover:hover {
@@ -16,4 +17,30 @@
 .cardTitle {
     align-items: center;
     gap: 8px;
+    min-width: 0;
+}
+
+.cartName {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tripInfoCard.helpRequested {
+    outline: 2px solid #ffd700;
+    box-shadow: 0 0 8px #ffd700;
+    margin-top: 4px;
+}
+
+.helpRequested .cardAlert {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    background-color: #ffd700;
+    padding: 0 8px;
+    border-radius: 8px;
+    font-weight: bold;
 }

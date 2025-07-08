@@ -49,10 +49,13 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
     }
 
     return (
-        <Card className={clsx(styles.tripInfoCard, { [styles.showHover]: doesNavToRoot })} onClick={() => onClick(cart)} title={
+        <Card className={clsx(styles.tripInfoCard, styles.helpRequested, { [styles.showHover]: doesNavToRoot })} onClick={() => onClick(cart)} title={
             // Card title (icon, name, locate button)
             <Flex className={styles.cardTitle} justify="space-between">
-                <Flex className={styles.cardTitle}><FaCarSide /> <span>{cart.name}</span></Flex>
+                <Flex className={styles.cardTitle}>
+                    <FaCarSide />
+                    <span className={styles.cartName}>{cart.name}</span>
+                </Flex>
 
                 <Flex gap="8px">
                     {!!cart.longLat &&
@@ -64,6 +67,7 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
                 </Flex>
             </Flex>
         }>
+            <div className={styles.cardAlert}>Help Requested</div>
             <Flex vertical gap="large">
                 <div>
                     <span style={{ fontWeight: 'bold' }}>Trip Progress</span>
