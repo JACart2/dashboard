@@ -1,6 +1,6 @@
 import express = require("express");
-import { createServer as createHTTPServer } from "http";
-import { ServerOptions, createServer as createHTTPSServer } from "https";
+import { createServer as createHttpServer } from "http";
+import { ServerOptions, createServer as createHttpsServer } from "https";
 import routes from "./routes";
 import cors = require("cors");
 import { Server } from "socket.io";
@@ -23,11 +23,12 @@ if (useHTTPS) {
   const httpsOptions: ServerOptions = {
     key: fs.readFileSync(process.env.SSL_KEY_PATH),
     cert: fs.readFileSync(process.env.SSL_CERT_PATH),
+    rejectUnauthorized: false,
   };
-  server = createHTTPSServer(httpsOptions, app);
+  server = createHttpsServer(httpsOptions, app);
 } else {
   console.log("STARTING HTTP (DEVELOPMENT) SERVER");
-  server = createHTTPServer(app);
+  server = createHttpServer(app);
 }
 
 const io = new Server(server, {
