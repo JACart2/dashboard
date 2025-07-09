@@ -1,6 +1,6 @@
 import express = require("express");
-import { createServer } from "http";
-import { ServerOptions } from "https";
+import { createServer as createHTTPServer } from "http";
+import { ServerOptions, createServer as createHTTPSServer } from "https";
 import routes from "./routes";
 import cors = require("cors");
 import { Server } from "socket.io";
@@ -12,15 +12,19 @@ import db = require("db");
 
 let httpsOptions: ServerOptions = {};
 
-if (!!process.env.SSL_KEY_PATH && !!process.env.SSL_CERT_PATH) {
-  httpsOptions = {
+const useHTTPS = !!process.env.SSL_KEY_PATH && !!process.env.SSL_CERT_PATH;
+const app = express();
+let server;
+
+if (useHTTPS) {
+  const httpsOptions: ServerOptions = {
     key: fs.readFileSync(process.env.SSL_KEY_PATH),
     cert: fs.readFileSync(process.env.SSL_CERT_PATH),
   };
+  server = createHTTPSServer(httpsOptions, app);
+} else {
+  server = createHTTPServer(app);
 }
-
-const app = express();
-const server = createServer(httpsOptions, app);
 
 const io = new Server(server, {
   cors: {
