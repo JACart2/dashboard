@@ -8,7 +8,9 @@ import path = require("path");
 import { redisSub } from "./config/db";
 import CameraSubManager from "./config/camera-subs";
 import fs = require("fs");
-import db = require("db");
+import dotenv from "dotenv";
+
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 let httpsOptions: ServerOptions = {};
 

@@ -26,7 +26,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "db": "^6.0.3",
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "fs": "0.0.1-security",
     "helmet": "^8.0.0",
