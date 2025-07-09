@@ -17,12 +17,14 @@ const app = express();
 let server;
 
 if (useHTTPS) {
+  console.log("STARTING HTTPS SERVER");
   const httpsOptions: ServerOptions = {
     key: fs.readFileSync(process.env.SSL_KEY_PATH),
     cert: fs.readFileSync(process.env.SSL_CERT_PATH),
   };
   server = createHTTPSServer(httpsOptions, app);
 } else {
+  console.log("STARTING HTTP (DEVELOPMENT) SERVER");
   server = createHTTPServer(app);
 }
 
