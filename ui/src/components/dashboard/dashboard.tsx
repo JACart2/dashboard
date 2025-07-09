@@ -188,8 +188,13 @@ export default function Dashboard() {
 
     // Ensure that carts with help requests are shown first in list
     useMemo(() => {
-        const helpRequested = Object.values(carts).filter(cart => !!cart.helpRequested);
-        const noAlerts = Object.values(carts).filter(cart => !cart.helpRequested);
+        const helpRequested: Vehicle[] = [];
+        const noAlerts: Vehicle[] = [];
+
+        Object.values(carts).forEach(cart => {
+            if (!!cart.helpRequested) helpRequested.push(cart);
+            else noAlerts.push(cart);
+        })
 
         setSortedCarts([...helpRequested, ...noAlerts]);
     }, [carts])
