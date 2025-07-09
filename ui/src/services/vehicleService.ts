@@ -12,7 +12,10 @@ export const vehicleService = {
     console.log("getting vehicles");
     console.log(this.BASE_URL);
 
-    const data = await fetch(this.BASE_URL, { method: "GET" });
+    const data = await fetch(this.BASE_URL, {
+      method: "GET",
+      credentials: "include",
+    });
     const json = await data.json();
     this.vehicles = this.parseVehicles(json);
 
