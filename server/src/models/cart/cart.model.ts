@@ -6,6 +6,7 @@ const CartModel = Object.freeze({
   longLat: null as number[],
   startLocation: null as string,
   endLocation: null as string,
+  helpRequested: null as boolean,
 });
 
 export default CartModel;

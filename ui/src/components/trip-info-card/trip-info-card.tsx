@@ -2,7 +2,7 @@
 import { Button, Card, Flex, Progress } from "antd";
 import clsx from "clsx";
 import React from "react";
-import { FaCarSide, FaLocationArrow, FaLocationCrosshairs, FaLocationDot, FaRightLong, FaTrash } from "react-icons/fa6";
+import { FaCarSide, FaLocationArrow, FaLocationCrosshairs, FaLocationDot, FaRightLong, FaTrash, FaTriangleExclamation } from "react-icons/fa6";
 // import { useNavigate } from "react-router-dom";
 
 import styles from './trip-info-card.module.css'
@@ -48,8 +48,17 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
         return vehicleService.deleteVehicle(cart.name);
     }
 
+    function toggleHelpRequested(e: React.MouseEvent) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        return vehicleService.editVehicle(cart.name, {
+            helpRequested: !cart.helpRequested
+        });
+    }
+
     return (
-        <Card className={clsx(styles.tripInfoCard, styles.helpRequested, { [styles.showHover]: doesNavToRoot })} onClick={() => onClick(cart)} title={
+        <Card className={clsx(styles.tripInfoCard, { [styles.showHover]: doesNavToRoot, [styles.helpRequested]: cart.helpRequested })} onClick={() => onClick(cart)} title={
             // Card title (icon, name, locate button)
             <Flex className={styles.cardTitle} justify="space-between">
                 <Flex className={styles.cardTitle}>
@@ -87,6 +96,9 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
                 <Progress type="dashboard" percent={speedToPercent(cart.speed)} style={{ margin: '0 auto' }} status="normal"
                     format={() => getSpeedLabel()} />
             </Flex>
+
+            {/* TODO: Remove when cart can request help from its UI */}
+            <Button className={styles.toggleHelpRequested} onClick={($event) => toggleHelpRequested($event)} icon={<FaTriangleExclamation />} shape="circle"></Button>
         </Card>
     );
 

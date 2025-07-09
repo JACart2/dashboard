@@ -62,6 +62,16 @@ export const vehicleService = {
   deleteVehicle(name: string) {
     return fetch(this.BASE_URL + name, { method: "DELETE" });
   },
+
+  editVehicle(name: string, data: Partial<Vehicle>) {
+    return fetch(this.BASE_URL + name, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+  },
 };
 
 function generateRandomLetters(length: number): string {

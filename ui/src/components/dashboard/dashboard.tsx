@@ -3,7 +3,7 @@ import { Content, Header } from "antd/es/layout/layout";
 import styles from "./dashboard.module.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-import { lazy, useEffect, useRef, useState } from "react";
+import { lazy, useEffect, useMemo, useRef, useState } from "react";
 import { Protocol } from "pmtiles";
 import maplibregl, { Marker } from "maplibre-gl";
 import { vehicleSocket } from "../../services/vehicleSocket";
@@ -18,6 +18,7 @@ export default function Dashboard() {
     const mapRef = useRef<HTMLDivElement | null>(null)
     const cartMarkers = useRef<{ [key: string]: Marker }>({})
     const [carts, setCarts] = useState<VehicleMap>({})
+    const [sortedCarts, setSortedCarts] = useState<Vehicle[]>([])
     const [isModalOpen, setIsModalOpen] = useState(false); // State for additional info modal
     const [cartImage, setCartImage] = useState<string>('')
     const [selectedCart, setSelectedCart] = useState<string>("");
@@ -185,6 +186,14 @@ export default function Dashboard() {
         };
     }, [])
 
+    // Ensure that carts with help requests are shown first in list
+    useMemo(() => {
+        const helpRequested = Object.values(carts).filter(cart => !!cart.helpRequested);
+        const noAlerts = Object.values(carts).filter(cart => !cart.helpRequested);
+
+        setSortedCarts([...helpRequested, ...noAlerts]);
+    }, [carts])
+
     return (
         <Layout className={styles.dashboardContainer}>
             <Header>
@@ -198,7 +207,8 @@ export default function Dashboard() {
             <Content>
                 <Flex className={`${styles.fillHeight} ${styles.dashboardContent}`}>
                     <Flex className={styles.dashboardCards} vertical gap="middle" justify="flex-start">
-                        {Object.values(carts).map((cart: Vehicle) => (
+                        {/* {Object.values(carts).map((cart: Vehicle) => ( */}
+                        {sortedCarts.map((cart: Vehicle) => (
                             <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name} onClick={(cart: Vehicle) => handleModal(cart)}></TripInfoCard>
                         ))}
                     </Flex>

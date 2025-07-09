@@ -6,6 +6,7 @@ export interface Vehicle {
   startLocation: string;
   endLocation: string;
   imgData?: string;
+  helpRequested?: boolean;
 }
 
 export interface VehicleMap {

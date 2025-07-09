@@ -8,7 +8,8 @@
     position: relative;
 }
 
-.tripInfoCard.showHover:hover {
+/* TODO: Remove `:not(:has(.toggleHelpRequested:hover))` when debug button is removed */
+.tripInfoCard.showHover:not(:has(.toggleHelpRequested:hover)):hover {
     outline: 2px solid #1677FF;
     box-shadow: 0 0 8px #1677FF;
     cursor: pointer;
@@ -33,7 +34,7 @@
     margin-top: 4px;
 }
 
-.helpRequested .cardAlert {
+.cardAlert {
     position: absolute;
     top: 0;
     left: 50%;
@@ -43,4 +44,22 @@
     padding: 0 8px;
     border-radius: 8px;
     font-weight: bold;
+    display: none;
+}
+
+.helpRequested .cardAlert {
+    display: block;
+}
+
+/* TODO: Remove below when debug button no longer needed */
+
+.tripInfoCard .toggleHelpRequested {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    opacity: 0;
+}
+
+.tripInfoCard:hover .toggleHelpRequested {
+    opacity: 1;
 }
