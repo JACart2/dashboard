@@ -59,7 +59,15 @@ io.on("connection", (socket) => {
 
 app.use(
   cors({
-    origin: "*",
+    origin: (origin, callback) => {
+      const allowedOrigins = ["https://35.153.174.48", "http://localhost:8000"];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, origin);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
   })
 );
 
