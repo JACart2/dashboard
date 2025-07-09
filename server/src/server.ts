@@ -33,7 +33,7 @@ if (useHTTPS) {
 
 const io = new Server(server, {
   cors: {
-    origin: ["*"],
+    origin: "https://35.153.174.48",
     methods: ["GET", "POST", "PUT"],
   },
   transports: ["websocket", "polling"],
