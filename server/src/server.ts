@@ -12,8 +12,6 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
-let httpsOptions: ServerOptions = {};
-
 const useHTTPS = !!process.env.SSL_KEY_PATH && !!process.env.SSL_CERT_PATH;
 const app = express();
 let server;
@@ -35,6 +33,7 @@ const io = new Server(server, {
   cors: {
     origin: "https://35.153.174.48",
     methods: ["GET", "POST", "PUT"],
+    credentials: true,
   },
   transports: ["websocket", "polling"],
 });

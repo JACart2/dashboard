@@ -5,7 +5,9 @@ const SOCKET_SERVER =
 
 console.log(SOCKET_SERVER);
 
-const socket = io(SOCKET_SERVER, { transports: ["websocket"] });
+const socket = io(SOCKET_SERVER, {
+  transports: ["websocket"],
+});
 
 export const vehicleSocket = {
   subscribe(callback: any) {
