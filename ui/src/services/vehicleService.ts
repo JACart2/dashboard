@@ -14,7 +14,6 @@ export const vehicleService = {
 
     const data = await fetch(this.BASE_URL, {
       method: "GET",
-      credentials: "include",
     });
     const json = await data.json();
     this.vehicles = this.parseVehicles(json);
@@ -33,7 +32,6 @@ export const vehicleService = {
 
     fetch(this.BASE_URL, {
       method: "POST",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -62,21 +60,18 @@ export const vehicleService = {
   getVehicle(name: string) {
     return fetch(this.BASE_URL + name, {
       method: "GET",
-      credentials: "include",
     });
   },
 
   deleteVehicle(name: string) {
     return fetch(this.BASE_URL + name, {
       method: "DELETE",
-      credentials: "include",
     });
   },
 
   editVehicle(name: string, data: Partial<Vehicle>) {
     return fetch(this.BASE_URL + name, {
       method: "PUT",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
