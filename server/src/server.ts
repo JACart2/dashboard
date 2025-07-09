@@ -1,14 +1,26 @@
 import express = require("express");
 import { createServer } from "http";
+import { ServerOptions } from "https";
 import routes from "./routes";
 import cors = require("cors");
 import { Server } from "socket.io";
 import path = require("path");
 import { redisSub } from "./config/db";
 import CameraSubManager from "./config/camera-subs";
+import fs = require("fs");
+import db = require("db");
+
+let httpsOptions: ServerOptions = {};
+
+if (!!process.env.SSL_KEY_PATH && !!process.env.SSL_CERT_PATH) {
+  httpsOptions = {
+    key: fs.readFileSync(process.env.SSL_KEY_PATH),
+    cert: fs.readFileSync(process.env.SSL_CERT_PATH),
+  };
+}
 
 const app = express();
-const server = createServer(app);
+const server = createServer(httpsOptions, app);
 
 const io = new Server(server, {
   cors: {
