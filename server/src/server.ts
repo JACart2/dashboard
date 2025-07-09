@@ -31,7 +31,7 @@ if (useHTTPS) {
 
 const io = new Server(server, {
   cors: {
-    origin: "https://35.153.174.48",
+    origin: "https://35.153.174.48:8000",
     methods: ["GET", "POST", "PUT"],
     credentials: true,
   },
@@ -59,7 +59,10 @@ io.on("connection", (socket) => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = ["https://35.153.174.48", "http://localhost:8000"];
+      const allowedOrigins = [
+        "https://35.153.174.48:8000",
+        "http://localhost:8000",
+      ];
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, origin);
       } else {
