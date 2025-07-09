@@ -12,8 +12,8 @@ const server = createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: ["*", "http://localhost:8000", "https://localhost:8000"],
-    methods: ["GET", "POST"],
+    origin: ["*"],
+    methods: ["GET", "POST", "PUT"],
   },
   transports: ["websocket", "polling"],
 });
@@ -36,7 +36,11 @@ io.on("connection", (socket) => {
   });
 });
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
