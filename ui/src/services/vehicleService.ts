@@ -30,6 +30,7 @@ export const vehicleService = {
 
     fetch(this.BASE_URL, {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -56,16 +57,23 @@ export const vehicleService = {
   },
 
   getVehicle(name: string) {
-    return fetch(this.BASE_URL + name, { method: "GET" });
+    return fetch(this.BASE_URL + name, {
+      method: "GET",
+      credentials: "include",
+    });
   },
 
   deleteVehicle(name: string) {
-    return fetch(this.BASE_URL + name, { method: "DELETE" });
+    return fetch(this.BASE_URL + name, {
+      method: "DELETE",
+      credentials: "include",
+    });
   },
 
   editVehicle(name: string, data: Partial<Vehicle>) {
     return fetch(this.BASE_URL + name, {
       method: "PUT",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
