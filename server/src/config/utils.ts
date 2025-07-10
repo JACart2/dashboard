@@ -41,7 +41,7 @@ export namespace Utils {
   }
 
   // Parse each value in the provided object
-  export function parseData(data: JSONObject) {
+  export function parseData(data: JSONObject): JSONObject {
     const parsedData = {};
 
     Object.entries(data).forEach(([key, value]: [string, any]) => {

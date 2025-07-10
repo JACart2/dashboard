@@ -109,15 +109,16 @@ vehicleRouter.post("/:name/toggle-help", async (req, res) => {
     return;
   }
 
-  const vehicle = await redis.hGetAll(`vehicle:${req.params.name}`);
+  const data = await redis.hGetAll(`vehicle:${req.params.name}`);
 
-  if (!vehicle) {
+  if (!data) {
     res.status(404).json({ error: "Vehicle not found" });
     return;
   }
 
+  const vehicle = Utils.parseData(data) as typeof CartModel;
+
   const helpRequested = req.body?.helpRequested ?? !vehicle.helpRequested;
-  console.log(req.body?.helpRequested, vehicle.helpRequested, helpRequested);
 
   const result = CartUtils.editCart(name, {
     helpRequested: helpRequested,
