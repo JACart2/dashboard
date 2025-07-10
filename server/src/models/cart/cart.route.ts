@@ -101,4 +101,28 @@ vehicleRouter.delete("/:name/", async (req, res) => {
   res.json(result);
 });
 
+vehicleRouter.post("/:name/toggle-help", async (req, res) => {
+  const name = req.params.name;
+
+  if (!name) {
+    res.status(404).json({ error: "Vehicle name is required" });
+    return;
+  }
+
+  const vehicle = await redis.hGetAll(`vehicle:${req.params.name}`);
+
+  if (!vehicle) {
+    res.status(404).json({ error: "Vehicle not found" });
+    return;
+  }
+
+  const helpRequested = req.body?.helpRequested ?? !vehicle.helpRequested;
+
+  const result = CartUtils.editCart(name, {
+    helpRequested: helpRequested,
+  });
+
+  res.json(result);
+});
+
 export default vehicleRouter;
