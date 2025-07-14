@@ -77,6 +77,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use("/api", routes);
 app.use(express.static(path.join(__dirname, "../static")));
+app.set("trust proxy", true);
 
 redisSub.subscribe("vehicles", (message) => {
   console.log("[WS] Received vehicle update:", message, "\n");
