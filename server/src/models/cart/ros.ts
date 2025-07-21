@@ -2,6 +2,7 @@ import * as ROSLIB from "roslib";
 import CameraSubManager from "../../config/camera-subs";
 import { CartUtils, Transform } from "../../config/utils";
 
+// A utility class that handles a cart's ROS connection
 export default class ROSListener {
   static listeners: { [name: string]: ROSListener } = {};
 
@@ -11,6 +12,7 @@ export default class ROSListener {
   ros: ROSLIB.Ros;
   topics: { [key: string]: ROSLIB.Topic };
 
+  // When instantiated, connect to the given ROS server address
   constructor(url: string, name: string) {
     this.url = url;
     this.name = name;
@@ -27,6 +29,7 @@ export default class ROSListener {
       );
     });
 
+    // A topic is created for each entry in CART_TOPICS
     this.topics = {};
     Object.entries(CART_TOPICS).forEach(([topicName, options]) => {
       this.topics[topicName] = new ROSLIB.Topic({
@@ -41,6 +44,7 @@ export default class ROSListener {
   }
 
   subscribeToTopics(): void {
+    // Decode and emit incoming camera frames
     this.topics["compressed_image"].subscribe((message) => {
       console.log(`[ROS] Received 'compressed_image':`, message);
 
@@ -48,6 +52,7 @@ export default class ROSListener {
       CameraSubManager.emitFrame(this.name, url);
     });
 
+    // Update cart location
     this.topics["limited_pose"].subscribe((message: any) => {
       // console.log(`[ROS] Received 'limited_pose':`, message);
       const longLat = Transform.rosToMapCoords(message.pose.pose.position);
@@ -114,6 +119,5 @@ const CART_TOPICS = {
     name: "/nav_cmd",
     messageType: "motor_control_interface/msg/VelAngle",
     throttle_rate: 500, // this can be changed based on bandwidth
-
   },
 };

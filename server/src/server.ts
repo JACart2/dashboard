@@ -1,14 +1,15 @@
 import express = require("express");
 import { createServer as createHttpServer } from "http";
 import { ServerOptions, createServer as createHttpsServer } from "https";
-import routes from "./routes";
-import cors = require("cors");
 import { Server } from "socket.io";
+import cors = require("cors");
 import path = require("path");
-import { redisSub } from "./config/db";
-import CameraSubManager from "./config/camera-subs";
 import fs = require("fs");
 import dotenv from "dotenv";
+
+import routes from "./routes";
+import { redisSub } from "./config/db";
+import CameraSubManager from "./config/camera-subs";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
@@ -16,6 +17,8 @@ const useHTTPS = !!process.env.SSL_KEY_PATH && !!process.env.SSL_CERT_PATH;
 const app = express();
 let server;
 
+// If SSL key/cert files are provided, we start the server as HTTPS
+// This enables Amazon Cognito, but we want to stick to HTTP for local development
 if (useHTTPS) {
   console.log("STARTING HTTPS SERVER");
   const httpsOptions: ServerOptions = {
@@ -29,6 +32,7 @@ if (useHTTPS) {
   server = createHttpServer(app);
 }
 
+// Initialize WebSocket server
 const io = new Server(server, {
   cors: {
     origin: "https://35.153.174.48:8000",
@@ -38,6 +42,7 @@ const io = new Server(server, {
   transports: ["websocket", "polling"],
 });
 
+// Define how each WebSocket message is handled
 io.on("connection", (socket) => {
   console.log("New WebSocket connection:", socket.id, "\n");
 
@@ -56,6 +61,8 @@ io.on("connection", (socket) => {
   });
 });
 
+// Define CORS rules for the server
+// Make sure that the server's IP is in "allowedOrigins"
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -75,10 +82,11 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use("/api", routes);
 app.use(express.static(path.join(__dirname, "../static")));
+app.use("/api", routes);
 app.set("trust proxy", true);
 
+// Any messages to redisSub on the server will be sent to all connected carts
 redisSub.subscribe("vehicles", (message) => {
   console.log("[WS] Received vehicle update:", message, "\n");
   io.emit("vehicles", JSON.parse(message));

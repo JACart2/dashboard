@@ -94,13 +94,14 @@ vehicleRouter.put("/:name/", async (req, res) => {
   res.json(result);
 });
 
-// Update a cart given its name
+// Delete a cart given its name
 vehicleRouter.delete("/:name/", async (req, res) => {
   const result = CartUtils.deleteCart(req.params.name);
 
   res.json(result);
 });
 
+// Toggle whether a given cart is requesting help or not
 vehicleRouter.post("/:name/toggle-help", async (req, res) => {
   const name = req.params.name;
 
