@@ -1,3 +1,5 @@
+// This component (currently unused) provides an example of a custom sign-in handler
+
 import { useAuth } from "react-oidc-context";
 
 function Auth() {
