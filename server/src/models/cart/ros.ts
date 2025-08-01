@@ -92,10 +92,12 @@ const CART_TOPICS = {
   visual_path: {
     name: "/visual_path",
     messageType: "visualization_msgs/msg/MarkerArray",
+    throttle_rate: 500,
   },
   limited_pose: {
     name: "/pcl_pose",
     messageType: "geometry_msgs/msg/PoseWithCovarianceStamped",
+    throttle_rate: 500,
   },
   vehicle_state: {
     name: "/vehicle_state",
@@ -105,6 +107,7 @@ const CART_TOPICS = {
   clicked_point: {
     name: "/clicked_point",
     messageType: "geometry_msgs/msg/PointStamped",
+    throttle_rate: 500,
   },
   compressed_image: {
     name: "/zed_front/zed_node_0/right_raw/image_raw_color/compressed",
@@ -114,6 +117,7 @@ const CART_TOPICS = {
   zed_rear: {
     name: "/zed/zed_node/rgb/image_raw_color/compressed",
     messageType: "sensor_msgs/msg/Image",
+    throttle_rate: 500,
   },
   nav_cmd: {
     name: "/nav_cmd",
