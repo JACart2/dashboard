@@ -21,6 +21,14 @@ To run:
 - Run `npm run start` to run both the Redis cache and the Node server
   - If developing, run `npm run dev` to enable live updates
 
+# Redis
+
+Redis is used as an in-memory data store and pub/sub message broker for cart/vehicle data.
+
+- **Data store**: Each registered cart is stored as a Redis hash under the key `vehicle:<name>`, holding fields such as `name`, `speed`, `tripProgress`, `longLat`, `startLocation`, `endLocation`, and `helpRequested`. Redis is configured (via `server/redis.conf`) with persistence disabled (`save ""`, `appendonly no`), so data is held in memory only and is cleared on restart.
+
+- **Pub/Sub**: When a cart's data is created, updated, or deleted, the server publishes a message to the `vehicles` Redis channel. A subscriber listening on that same channel forwards the message to all connected browser clients via Socket.IO, keeping the dashboard UI in real-time sync with the latest cart state.
+
 # How to see ROS2 topics between multiple computers
 This is referring to being able to see the ROS2 topics of computer1 on computer2, or in the future, be able to see the ros2 topics of James and Madison on the dashboard server, in order to show that data to the admin.
 
