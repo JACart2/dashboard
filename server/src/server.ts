@@ -43,7 +43,7 @@ const io = new Server(server, {
 });
 
 // Define how each WebSocket message is handled
-io.on("connection", (socket) => {
+socket.on("connection", (socket) => {
   console.log("New WebSocket connection:", socket.id, "\n");
 
   socket.on("message", (msg) => {});
@@ -54,6 +54,12 @@ io.on("connection", (socket) => {
 
   socket.on("unsubscribe-camera", (cartName: string) => {
     CameraSubManager.unsubscribe(cartName, socket);
+  });
+
+  // Handle stop signal from dashboard UI
+  socket.on("stop-ui", (targetUI: string) => {
+    console.log(`Sending stop signal to UI: ${targetUI}`);
+    io.emit("stop-signal", { target: targetUI, timestamp: Date.now() });
   });
 
   socket.on("disconnect", () => {
