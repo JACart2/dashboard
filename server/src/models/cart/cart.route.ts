@@ -96,9 +96,9 @@ vehicleRouter.put("/:name/", async (req, res) => {
 
 // Delete a cart given its name
 vehicleRouter.delete("/:name/", async (req, res) => {
-  const result = CartUtils.deleteCart(req.params.name);
+  await CartUtils.deleteCart(req.params.name);
 
-  res.json(result);
+  res.json({});
 });
 
 // Toggle whether a given cart is requesting help or not

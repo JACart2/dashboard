@@ -14,9 +14,10 @@ interface TripInfoProps {
     focusCartCallback?: (a: number[]) => void
     doesNavToRoot?: boolean
     onClick: (arg0: Vehicle) => void;
+    onDelete?: (name: string) => void;
 }
 
-export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, onClick }: TripInfoProps) {
+export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, onClick, onDelete }: TripInfoProps) {
     // const navigate = useNavigate();
 
 
@@ -45,7 +46,8 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
         e.preventDefault();
         e.stopPropagation();
 
-        return vehicleService.deleteVehicle(cart.name);
+        vehicleService.deleteVehicle(cart.name);
+        onDelete?.(cart.name);
     }
 
     function toggleHelpRequested(e: React.MouseEvent) {

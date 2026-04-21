@@ -214,7 +214,7 @@ export default function Dashboard() {
                     <Flex className={styles.dashboardCards} vertical gap="middle" justify="flex-start">
                         {/* {Object.values(carts).map((cart: Vehicle) => ( */}
                         {sortedCarts.map((cart: Vehicle) => (
-                            <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name} onClick={(cart: Vehicle) => handleModal(cart)}></TripInfoCard>
+                            <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name} onClick={(cart: Vehicle) => handleModal(cart)} onDelete={(name: string) => deleteCart(name)}></TripInfoCard>
                         ))}
                     </Flex>
                     <div ref={mapRef} id={styles.map} >
