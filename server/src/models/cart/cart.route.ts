@@ -96,9 +96,17 @@ vehicleRouter.put("/:name/", async (req, res) => {
 
 // Delete a cart given its name
 vehicleRouter.delete("/:name/", async (req, res) => {
-  const result = CartUtils.deleteCart(req.params.name);
+  const name = req.params.name;
 
-  res.json(result);
+  // Disconnect and remove the ROS listener so it stops writing data back to Redis
+  if (ROSListener.listeners[name]) {
+    ROSListener.listeners[name].ros.close();
+    delete ROSListener.listeners[name];
+  }
+
+  await CartUtils.deleteCart(name);
+
+  res.json({ name });
 });
 
 // Toggle whether a given cart is requesting help or not
