@@ -9,20 +9,13 @@
 <body>
     <div class="container">
         <h1>Active Carts</h1>
-        <div class="cart-boxes">
-            <div class="cart-box" onclick="openCartDetails('James')">
-                <div class="cart-name-container">
-                    <div class="cart-name">James</div>
-                </div>
-                <div class="ipv6">IPv6: 2607:f8b0:4005:805::200e</div>
-            </div>
-            <div class="cart-box" onclick="openCartDetails('Madison')">
-                <div class="cart-name-container">
-                    <div class="cart-name">Madison</div>
-                </div>
-                <div class="ipv6">IPv6: 2607:f8b0:4005:805::200f</div>
-            </div>
+
+        <div class="controls">
+            <button id="addCartBtn">Add Cart</button>
+            <button id="refreshBtn">Refresh</button>
         </div>
+
+        <div id="cartBoxes" class="cart-boxes"></div>
     </div>
 
     <div id="cartDetails" class="details-container" style="display:none;">
