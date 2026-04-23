@@ -35,7 +35,15 @@ if (useHTTPS) {
 // Initialize WebSocket server
 const io = new Server(server, {
   cors: {
-    origin: "https://35.153.174.48:8000",
+    origin: (origin, callback) => {
+      const allowedOrigins = ["https://35.153.174.48", "https://35.153.174.48:8000"];
+      const isLocalhost = origin?.startsWith("http://localhost:");
+      if (!origin || allowedOrigins.includes(origin) || isLocalhost) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT"],
     credentials: true,
   },

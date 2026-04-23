@@ -19,8 +19,8 @@ export const vehicleService = {
     return this.vehicles;
   },
 
-  createTestVehicle() {
-    let longLat = [
+  async createTestVehicle(): Promise<Vehicle> {
+    const longLat: [number, number] = [
       Math.random() * 0.004 - 78.86,
       Math.random() * 0.004 + 38.43,
     ];
@@ -28,22 +28,30 @@ export const vehicleService = {
     console.log("Creating vehicle");
     console.log(this.BASE_URL);
 
-    fetch(this.BASE_URL, {
+    const body = {
+      name: generateRandomLetters(8),
+      speed: Math.random() * 8,
+      longLat: longLat,
+      startLocation: "Starting point",
+      endLocation: "Ending point",
+    };
+
+    const res = await fetch(this.BASE_URL, {
       method: "POST",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        name: generateRandomLetters(8),
-        speed: Math.random() * 8,
-        // long: (Math.random() * 0.004) - 78.86,
-        // lat: (Math.random() * 0.004) + 38.43,
-        longLat: longLat,
-        startLocation: "Starting point",
-        endLocation: "Ending point",
-      }),
+      body: JSON.stringify(body),
     });
+
+    if (!res.ok) throw new Error(`Failed to create vehicle: ${res.status}`);
+
+    const data = await res.json();
+
+    // Merge body with server response: body has all fields (including those the
+    // server may not echo back), server response confirms/overrides stored values.
+    return { ...body, ...data } as Vehicle;
   },
 
   parseVehicles(vehicles: any): VehicleMap {
