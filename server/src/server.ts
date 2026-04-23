@@ -66,7 +66,7 @@ io.on("connection", (socket) => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = ["https://35.153.174.48", "http://localhost:8000"];
+      const allowedOrigins = ["https://10.247.225.41", "http://localhost:8000"];
 
       const isLocalhost = origin?.startsWith("http://localhost");
 
