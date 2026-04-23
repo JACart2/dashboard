@@ -32,11 +32,25 @@ if (useHTTPS) {
   server = createHttpServer(app);
 }
 
+// Define CORS rules for the server
+// Set ALLOWED_ORIGINS in .env as a comma-separated list to allow additional origins.
+// Requests from http://localhost:<any port> are always allowed.
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+  : [];
+
 // Initialize WebSocket server
 const io = new Server(server, {
   cors: {
-    origin: "https://35.153.174.48:8000",
-    methods: ["GET", "POST", "PUT"],
+    origin: (origin, callback) => {
+      const isLocalhost = origin?.startsWith("http://localhost:");
+      if (!origin || allowedOrigins.includes(origin) || isLocalhost) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
   transports: ["websocket", "polling"],
@@ -61,15 +75,11 @@ io.on("connection", (socket) => {
   });
 });
 
-// Define CORS rules for the server
-// Make sure that the server's IP is in "allowedOrigins"
+// Express HTTP CORS — uses the same allowedOrigins list defined above
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = ["https://35.153.174.48", "http://localhost:8000"];
-
       const isLocalhost = origin?.startsWith("http://localhost:");
-
       if (!origin || allowedOrigins.includes(origin) || isLocalhost) {
         callback(null, origin);
       } else {
