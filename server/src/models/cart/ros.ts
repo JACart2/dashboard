@@ -85,7 +85,7 @@ export default class ROSListener {
       const speed = message?.["vel"];
       CartUtils.editCart(this.name, { speed });
     });
-    this.topics["anomaly_result"].subscribe((message: any) => {
+    this.topics["aad/alerts"].subscribe((message: any) => {
       console.log(`[ROS] Received 'anomaly_result':`, message);
 
       const anomalyResult = message?.["data"];
