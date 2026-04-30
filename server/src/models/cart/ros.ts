@@ -130,4 +130,9 @@ const CART_TOPICS = {
     messageType: "motor_control_interface/msg/VelAngle",
     throttle_rate: 500, // this can be changed based on bandwidth
   },
+  anomaly_result: {
+    name: "/anomaly_result",
+    messageType: "std_msgs/msg/String",
+    throttle_rate: 500,
+  },
 };
