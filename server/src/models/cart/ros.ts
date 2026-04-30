@@ -85,12 +85,16 @@ export default class ROSListener {
       const speed = message?.["vel"];
       CartUtils.editCart(this.name, { speed });
     });
-    this.topics["aad/alerts"].subscribe((message: any) => {
-      console.log(`[ROS] Received 'anomaly_result':`, message);
+    try {
+      this.topics["aad/alerts"].subscribe((message: any) => {
+        console.log(`[ROS] Received 'anomaly_result':`, message);
 
-      const anomalyResult = message?.["data"];
-      CartUtils.editCart(this.name, { anomalyResult });
-    });
+        const anomalyResult = message?.["data"];
+        CartUtils.editCart(this.name, { anomalyResult });
+      });
+    } catch (e) {
+      console.error(`[ROS] Failed to subscribe to 'anomaly_result':`, e);
+    }
   }
 }
 
