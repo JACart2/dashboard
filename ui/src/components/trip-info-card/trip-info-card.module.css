@@ -51,6 +51,15 @@
     display: block;
 }
 
+.anomalyAlert {
+    background-color: #B03020;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: center;
+}
+
 /* TODO: Remove below when debug button no longer needed */
 
 .tripInfoCard .toggleHelpRequested {
