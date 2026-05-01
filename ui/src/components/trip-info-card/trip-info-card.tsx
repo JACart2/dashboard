@@ -92,13 +92,13 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
                         </Flex>
                     }
                 </div>
+                <div className={styles.anomalyAlert}>
+                    <span>Anomaly:</span>{" "}
+                    <span>{cart.anomalyResult ?? "N/A"}</span>
+                </div>
 
                 <Progress type="dashboard" percent={speedToPercent(cart.speed)} style={{ margin: '0 auto' }} status="normal"
                     format={() => getSpeedLabel()} />
-                <div style={{ textAlign: 'center', marginTop: '8px' }}>
-                    <span style={{ fontWeight: 600 }}>Anomaly:</span>{" "}
-                    <span>{cart.anomalyResult ?? "N/A"}</span>
-                </div>
             </Flex>
 
             {/* TODO: Remove when cart can request help from its UI */}
