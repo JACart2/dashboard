@@ -10,6 +10,7 @@ import dotenv from "dotenv";
 import routes from "./routes";
 import { redisSub } from "./config/db";
 import CameraSubManager from "./config/camera-subs";
+import AnomalyBroadcaster from "./config/anomaly-broadcast";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
@@ -41,6 +42,8 @@ const io = new Server(server, {
   },
   transports: ["websocket", "polling"],
 });
+
+AnomalyBroadcaster.init(io);
 
 // Define how each WebSocket message is handled
 io.on("connection", (socket) => {
