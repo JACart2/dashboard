@@ -8,15 +8,6 @@
     position: relative;
 }
 
-.anomalyAlert {
-    background-color: #B03020;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-weight: bold;
-    text-align: center;
-}
-
 /* TODO: Remove `:not(:has(.toggleHelpRequested:hover))` when debug button is removed */
 .tripInfoCard.showHover:not(:has(.toggleHelpRequested:hover)):hover {
     outline: 2px solid #1677FF;
