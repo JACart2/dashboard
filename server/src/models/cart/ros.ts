@@ -65,7 +65,10 @@ export default class ROSListener {
     });
 
     this.topics["vehicle_state"].subscribe((message: any) => {
-      console.log(`[ROS] Received 'vehicle_state':`, message);
+      const speed = message?.["speed"];
+      if (speed !== undefined) {
+        CartUtils.editCart(this.name, { speed });
+      }
     });
 
     this.topics["clicked_point"].subscribe((message: any) => {
@@ -85,16 +88,11 @@ export default class ROSListener {
       const speed = message?.["vel"];
       CartUtils.editCart(this.name, { speed });
     });
-    try {
-      this.topics["ai_anomaly_logging_ui"/*"aad/alerts"*/].subscribe((message: any) => {
-        console.log(`[ROS] Received 'anomaly_result':`, message);
-
-        const anomalyResult = message?.["data"];
-        CartUtils.editCart(this.name, { anomalyResult });
-      });
-    } catch (e) {
-      console.error(`[ROS] Failed to subscribe to 'anomaly_result':`, e);
-    }
+    this.topics["anomaly_result"].subscribe((message: any) => {
+      console.log(`[ROS] Received 'anomaly_result':`, message);
+      const anomalyResult = message?.["data"];
+      CartUtils.editCart(this.name, { anomalyResult });
+    });
   }
 }
 
@@ -135,7 +133,7 @@ const CART_TOPICS = {
     throttle_rate: 500, // this can be changed based on bandwidth
   },
   anomaly_result: {
-    name: "ai_anomaly_logging_ui", // "/aad/alerts",
+    name: "/ai_anomaly_logging_ui",
     messageType: "std_msgs/msg/String",
     throttle_rate: 500,
   },
