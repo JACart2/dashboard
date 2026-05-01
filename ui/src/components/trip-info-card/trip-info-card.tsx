@@ -18,8 +18,6 @@ interface TripInfoProps {
 
 export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, onClick }: TripInfoProps) {
     // const navigate = useNavigate();
-
-    console.log("RIGHT HERE, OVER HERE HERE" + cart.anomalyResult);
     
     function speedToPercent(speed?: number) {
         speed = speed ?? 0;
