@@ -22,6 +22,7 @@ export default function Dashboard() {
     const [isModalOpen, setIsModalOpen] = useState(false); // State for additional info modal
     const [cartImage, setCartImage] = useState<string>('')
     const [selectedCart, setSelectedCart] = useState<string>("");
+    const [anomalyMessage, setAnomalyMessage] = useState<string>('');
 
     const showModal = (cartName: string) => {
         setSelectedCart(cartName)
@@ -167,6 +168,9 @@ export default function Dashboard() {
         })
         vehicleSocket.subscribe(vehicleSocketCallback);
 
+        const anomalyCallback = (msg: string) => setAnomalyMessage(msg);
+        vehicleSocket.subscribeAnomaly(anomalyCallback);
+
         const protocol = new Protocol();
         maplibregl.addProtocol("pmtiles", protocol.tile);
         map.current = new maplibregl.Map({
@@ -183,6 +187,7 @@ export default function Dashboard() {
 
         return () => {
             vehicleSocket.unsubscribe(vehicleSocketCallback); // Cleanup on unmount
+            vehicleSocket.unsubscribeAnomaly(anomalyCallback);
         };
     }, [])
 
@@ -239,6 +244,12 @@ export default function Dashboard() {
                 </Flex>
 
             </Content>
+            {anomalyMessage && (
+                <div className={styles.anomalyBox}>
+                    <span className={styles.anomalyLabel}>AI Anomaly</span>
+                    <span className={styles.anomalyText}>{anomalyMessage}</span>
+                </div>
+            )}
         </Layout>
 
 

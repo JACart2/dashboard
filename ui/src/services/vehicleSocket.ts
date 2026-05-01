@@ -33,4 +33,12 @@ export const vehicleSocket = {
   unsubscribeCamera(cartName: string) {
     socket.emit("unsubscribe-camera", cartName);
   },
+
+  subscribeAnomaly(callback: (message: string) => void) {
+    socket.on("anomaly-update", callback);
+  },
+
+  unsubscribeAnomaly(callback: (message: string) => void) {
+    socket.off("anomaly-update", callback);
+  },
 };

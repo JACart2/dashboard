@@ -1,5 +1,6 @@
 import * as ROSLIB from "roslib";
 import CameraSubManager from "../../config/camera-subs";
+import AnomalyBroadcaster from "../../config/anomaly-broadcast";
 import { CartUtils, Transform } from "../../config/utils";
 
 // A utility class that handles a cart's ROS connection
@@ -88,6 +89,7 @@ export default class ROSListener {
     try {
       this.topics["anomaly_result"].subscribe((message: any) => {
         console.log(`[ROS] Received 'anomaly_result':`, message);
+        AnomalyBroadcaster.broadcast(message?.data ?? String(message));
       });
     } catch (e) {
       console.error(`[ROS] Failed to subscribe to 'anomaly_result':`, e);

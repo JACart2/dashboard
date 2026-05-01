@@ -44,3 +44,38 @@
         flex: 1;
     }
 }
+
+.anomalyBox {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 320px;
+    padding: 10px 14px;
+    background-color: rgba(30, 30, 30, 0.88);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+
+.anomalyLabel {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--jmu-gold, #c8a84b);
+}
+
+.anomalyText {
+    font-size: 13px;
+    color: #f0f0f0;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-height: 80px;
+    overflow-y: auto;
+    line-height: 1.4;
+}
