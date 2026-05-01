@@ -86,7 +86,7 @@ export default class ROSListener {
       CartUtils.editCart(this.name, { speed });
     });
     try {
-      this.topics["aad/alerts"].subscribe((message: any) => {
+      this.topics["ai_anomaly_logging_ui"/*"aad/alerts"*/].subscribe((message: any) => {
         console.log(`[ROS] Received 'anomaly_result':`, message);
 
         const anomalyResult = message?.["data"];
@@ -135,7 +135,7 @@ const CART_TOPICS = {
     throttle_rate: 500, // this can be changed based on bandwidth
   },
   anomaly_result: {
-    name: "/aad/alerts",
+    name: "ai_anomaly_logging_ui", // "/aad/alerts",
     messageType: "std_msgs/msg/String",
     throttle_rate: 500,
   },
