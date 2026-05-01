@@ -3,7 +3,7 @@ import { Content, Header } from "antd/es/layout/layout";
 import styles from "./dashboard.module.css";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, useEffect, useMemo, useRef, useState } from "react";
 import { Protocol } from "pmtiles";
 import maplibregl, { Marker } from "maplibre-gl";
 import { vehicleSocket } from "../../services/vehicleSocket";
@@ -212,17 +212,15 @@ export default function Dashboard() {
             <Content>
                 <Flex className={`${styles.fillHeight} ${styles.dashboardContent}`}>
                     <Flex className={styles.dashboardCards} vertical gap="middle" justify="flex-start">
-                        <Suspense fallback={<div>Loading cards...</div>}>
                         {sortedCarts.map((cart: Vehicle) => (
-                        <TripInfoCard 
-                            cart={cart} 
-                            doesNavToRoot={true} 
-                            focusCartCallback={(longLat: number[]) => focusCart(longLat)} 
-                            key={cart.name} 
-                            onClick={(cart: Vehicle) => handleModal(cart)}
-                        />
+                            <TripInfoCard 
+                                cart={cart} 
+                                doesNavToRoot={true} 
+                                focusCartCallback={(longLat: number[]) => focusCart(longLat)} 
+                                key={cart.name} 
+                                onClick={(cart: Vehicle) => handleModal(cart)}
+                            />
                         ))}
-                        </Suspense>
                     </Flex>
                     <div ref={mapRef} id={styles.map} >
                         <Modal
