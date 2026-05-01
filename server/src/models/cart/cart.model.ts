@@ -7,7 +7,6 @@ const CartModel = Object.freeze({
   startLocation: null as string,
   endLocation: null as string,
   helpRequested: null as boolean,
-  anomalyResult: null as string,
 });
 
 export default CartModel;
