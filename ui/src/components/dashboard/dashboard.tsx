@@ -137,39 +137,28 @@ export default function Dashboard() {
         })
     }, [carts])
 
+    // Socket subscriptions are in their own effect so they survive React
+    // StrictMode's double-invocation (which would otherwise cause the map guard
+    // below to short-circuit re-subscription after cleanup).
     useEffect(() => {
-        // this needs to change even
-        // const vehicles: VehicleMap = {
-        //     "James": {
-        //         name: 'James',
-        //         speed: 3,
-        //         tripProgress: 75,
-        //         longLat: [-78.863156, 38.433347],
-        //         startLocation: 'Chesapeake Hall',
-        //         endLocation: 'Front of King Hall'
-        //     },
-        //     "Madison": {
-        //         name: 'Madison',
-        //         speed: 6,
-        //         tripProgress: 20,
-        //         longLat: [-78.860981, 38.431957],
-        //         startLocation: 'E-Hall',
-        //         endLocation: 'Festival'
-        //     },
-        // };
-
-        // setCarts(vehicles)
-
-        if (map.current != undefined || mapRef.current == undefined) return
-
         vehicleService.getVehicles().then((vehicles) => {
             console.log("Vehicles: ", vehicles);
             setCarts(vehicles as VehicleMap)
         })
+
         vehicleSocket.subscribe(vehicleSocketCallback);
 
         const anomalyCallback = (msg: string) => setAnomalyMessage(msg);
         vehicleSocket.subscribeAnomaly(anomalyCallback);
+
+        return () => {
+            vehicleSocket.unsubscribe(vehicleSocketCallback);
+            vehicleSocket.unsubscribeAnomaly(anomalyCallback);
+        };
+    }, [])
+
+    useEffect(() => {
+        if (map.current != undefined || mapRef.current == undefined) return
 
         const protocol = new Protocol();
         maplibregl.addProtocol("pmtiles", protocol.tile);
@@ -182,13 +171,6 @@ export default function Dashboard() {
 
         const nav = new maplibregl.NavigationControl();
         map.current.addControl(nav, "top-left");
-
-        // const locationPins: Marker[] = [];
-
-        return () => {
-            vehicleSocket.unsubscribe(vehicleSocketCallback); // Cleanup on unmount
-            vehicleSocket.unsubscribeAnomaly(anomalyCallback);
-        };
     }, [])
 
     // Ensure that carts with help requests are shown first in list
