@@ -46,7 +46,7 @@ export default class ROSListener {
   subscribeToTopics(): void {
     // Decode and emit incoming camera frames
     this.topics["compressed_image"].subscribe((message) => {
-      console.log(`[ROS] Received 'compressed_image':`, message);
+      // console.log(`[ROS] Received 'compressed_image':`, message);
 
       const url = CameraSubManager.encodeBase64(message?.["data"]);
       CameraSubManager.emitFrame(this.name, url);
@@ -61,26 +61,26 @@ export default class ROSListener {
     });
 
     this.topics["visual_path"].subscribe((message: any) => {
-      console.log(`[ROS] Received 'visual_path':`, message);
+      // console.log(`[ROS] Received 'visual_path':`, message);
     });
 
     this.topics["vehicle_state"].subscribe((message: any) => {
-      console.log(`[ROS] Received 'vehicle_state':`, message);
+      // console.log(`[ROS] Received 'vehicle_state':`, message);
     });
 
     this.topics["clicked_point"].subscribe((message: any) => {
-      console.log(`[ROS] Received 'clicked_point':`, message);
+      // console.log(`[ROS] Received 'clicked_point':`, message);
     });
 
     this.topics["zed_rear"].subscribe((message: any) => {
-      console.log(`[ROS] Received 'zed_rear':`, message);
+      // console.log(`[ROS] Received 'zed_rear':`, message);
 
       const url = CameraSubManager.encodeBase64(message?.["data"]);
       CameraSubManager.emitFrame(this.name, url);
     });
 
     this.topics["nav_cmd"].subscribe((message) => {
-      console.log(`[ROS] Received 'nav_cmd':`, message);
+      // console.log(`[ROS] Received 'nav_cmd':`, message);
 
       const speed = message?.["vel"];
       CartUtils.editCart(this.name, { speed });
