@@ -88,7 +88,7 @@ app.set("trust proxy", true);
 
 // Any messages to redisSub on the server will be sent to all connected carts
 redisSub.subscribe("vehicles", (message) => {
-  console.log("[WS] Received vehicle update:", message, "\n");
+  // console.log("[WS] Received vehicle update:", message, "\n");
   io.emit("vehicles", JSON.parse(message));
 });
 
