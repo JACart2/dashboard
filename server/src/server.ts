@@ -10,7 +10,6 @@ import dotenv from "dotenv";
 import routes from "./routes";
 import { redisSub } from "./config/db";
 import CameraSubManager from "./config/camera-subs";
-import AnomalyBroadcaster from "./config/anomaly-broadcast";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
@@ -42,8 +41,6 @@ const io = new Server(server, {
   },
   transports: ["websocket", "polling"],
 });
-
-AnomalyBroadcaster.init(io);
 
 // Define how each WebSocket message is handled
 io.on("connection", (socket) => {
@@ -93,6 +90,12 @@ app.set("trust proxy", true);
 redisSub.subscribe("vehicles", (message) => {
   console.log("[WS] Received vehicle update:", message, "\n");
   io.emit("vehicles", JSON.parse(message));
+});
+
+// Forward anomaly alerts to all connected frontend clients
+redisSub.subscribe("anomalies", (message) => {
+  console.log("[WS] Received anomaly alert:", message, "\n");
+  io.emit("anomaly", message);
 });
 
 const PORT = 8000;

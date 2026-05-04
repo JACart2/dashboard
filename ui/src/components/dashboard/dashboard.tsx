@@ -22,7 +22,7 @@ export default function Dashboard() {
     const [isModalOpen, setIsModalOpen] = useState(false); // State for additional info modal
     const [cartImage, setCartImage] = useState<string>('')
     const [selectedCart, setSelectedCart] = useState<string>("");
-    const [anomalyMessage, setAnomalyMessage] = useState<string>('');
+    const [anomalyMessages, setAnomalyMessages] = useState<string[]>([]);
 
     const showModal = (cartName: string) => {
         setSelectedCart(cartName)
@@ -148,7 +148,10 @@ export default function Dashboard() {
 
         vehicleSocket.subscribe(vehicleSocketCallback);
 
-        const anomalyCallback = (msg: string) => setAnomalyMessage(msg);
+        const anomalyCallback = (msg: string) => {
+            console.log("[Anomaly] Received:", msg);
+            setAnomalyMessages(prev => [...prev, msg]);
+        };
         vehicleSocket.subscribeAnomaly(anomalyCallback);
 
         return () => {
@@ -226,10 +229,14 @@ export default function Dashboard() {
                 </Flex>
 
             </Content>
-            {anomalyMessage && (
+            {anomalyMessages.length > 0 && (
                 <div className={styles.anomalyBox}>
-                    <span className={styles.anomalyLabel}>AI Anomaly</span>
-                    <span className={styles.anomalyText}>{anomalyMessage}</span>
+                    <span className={styles.anomalyLabel}>AI Anomaly Alerts</span>
+                    <ul className={styles.anomalyList}>
+                        {anomalyMessages.map((msg, i) => (
+                            <li key={i} className={styles.anomalyText}>{msg}</li>
+                        ))}
+                    </ul>
                 </div>
             )}
         </Layout>

@@ -70,12 +70,21 @@
     color: var(--jmu-gold, #c8a84b);
 }
 
+.anomalyList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 120px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
 .anomalyText {
     font-size: 13px;
     color: #f0f0f0;
     word-break: break-word;
     overflow-wrap: break-word;
-    max-height: 80px;
-    overflow-y: auto;
     line-height: 1.4;
 }

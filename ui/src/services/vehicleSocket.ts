@@ -35,10 +35,10 @@ export const vehicleSocket = {
   },
 
   subscribeAnomaly(callback: (message: string) => void) {
-    socket.on("anomaly-update", callback);
+    socket.on("anomaly", callback);
   },
 
   unsubscribeAnomaly(callback: (message: string) => void) {
-    socket.off("anomaly-update", callback);
+    socket.off("anomaly", callback);
   },
 };

@@ -1,6 +1,6 @@
 import * as ROSLIB from "roslib";
 import CameraSubManager from "../../config/camera-subs";
-import AnomalyBroadcaster from "../../config/anomaly-broadcast";
+import { redisPub } from "../../config/db";
 import { CartUtils, Transform } from "../../config/utils";
 
 // A utility class that handles a cart's ROS connection
@@ -86,14 +86,13 @@ export default class ROSListener {
       const speed = message?.["vel"];
       CartUtils.editCart(this.name, { speed });
     });
-    try {
-      this.topics["anomaly_result"].subscribe((message: any) => {
-        console.log(`[ROS] Received 'anomaly_result':`, message);
-        AnomalyBroadcaster.broadcast(message?.data ?? String(message));
-      });
-    } catch (e) {
-      console.error(`[ROS] Failed to subscribe to 'anomaly_result':`, e);
-    }
+    this.topics["anomaly_result"].subscribe((message: any) => {
+      const payload = message?.data ?? String(message);
+      console.log(`[ROS] Received 'anomaly_result':`, payload);
+      redisPub.publish("anomalies", payload).catch((err) =>
+        console.error("[ROS] Failed to publish anomaly to Redis:", err)
+      );
+    });
   }
 }
 
