@@ -87,7 +87,10 @@ export default class ROSListener {
     });
     try {
       this.topics["anomaly_result"].subscribe((message: any) => {
-        console.log(`[ROS] Received 'anomaly_result':`, message);
+        console.log("                      INCOMING ANOMALY MESSAGE")
+        console.log("______________________________________________________________________")
+        console.log(message.data);
+        console.log("______________________________________________________________________")
 
         const anomalyResult = message.data;
         CartUtils.editCart(this.name, { anomalyResult });
