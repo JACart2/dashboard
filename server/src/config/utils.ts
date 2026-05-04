@@ -70,7 +70,7 @@ export namespace CartUtils {
       JSON.stringify({ name: name, data: filtered })
     );
 
-    console.log(`[REDIS] "${name}" modified:`, filtered);
+    // console.log(`[REDIS] "${name}" modified:`, filtered);
 
     return filtered;
   }
@@ -83,7 +83,7 @@ export namespace CartUtils {
       JSON.stringify({ name: name, deleted: true })
     );
 
-    console.log(`[REDIS] "${name}" deleted`);
+    // console.log(`[REDIS] "${name}" deleted`);
 
     return;
   }
