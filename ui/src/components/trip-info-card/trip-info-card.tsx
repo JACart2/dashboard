@@ -19,7 +19,6 @@ interface TripInfoProps {
 export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, onClick }: TripInfoProps) {
     // const navigate = useNavigate();
 
-
     function speedToPercent(speed?: number) {
         speed = speed ?? 0;
         const max = 8;
@@ -92,6 +91,13 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
                         </Flex>
                     }
                 </div>
+
+                {!!cart.anomalyResult &&
+                    <div className={styles.anomalyAlert}>
+                        <span>Anomaly:</span>{" "}
+                        <span>{cart.anomalyResult}</span>
+                    </div>
+                }
 
                 <Progress type="dashboard" percent={speedToPercent(cart.speed)} style={{ margin: '0 auto' }} status="normal"
                     format={() => getSpeedLabel()} />

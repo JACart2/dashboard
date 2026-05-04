@@ -122,7 +122,7 @@ vehicleRouter.post("/:name/toggle-help", async (req, res) => {
   const helpRequested = req.body?.helpRequested ?? !vehicle.helpRequested;
 
   const result = await CartUtils.editCart(name, {
-    helpRequested: helpRequested,
+    helpRequested,
   });
 
   res.json(result);
