@@ -85,6 +85,25 @@ export default class ROSListener {
       const speed = message?.["vel"];
       CartUtils.editCart(this.name, { speed });
     });
+
+    this.topics["anomaly"].subscribe((message: any) => {
+      console.log(`[ROS] Received 'anomaly':`, message);
+
+      // Support std_msgs/String (.data) or a plain JSON string payload
+      let anomalyMessage: string;
+      if (typeof message?.data === "string") {
+        anomalyMessage = message.data;
+      } else if (message != null && typeof message === "object") {
+        anomalyMessage = "Unknown anomaly detected";
+      } else {
+        anomalyMessage = String(message ?? "Unknown anomaly detected");
+      }
+
+      CartUtils.editCart(this.name, {
+        anomalyMessage,
+        anomalyTimestamp: Date.now(),
+      });
+    });
   }
 }
 
@@ -123,5 +142,10 @@ const CART_TOPICS = {
     name: "/nav_cmd",
     messageType: "motor_control_interface/msg/VelAngle",
     throttle_rate: 500, // this can be changed based on bandwidth
+  },
+  anomaly: {
+    name: process.env.ANOMALY_TOPIC ?? "/anomaly",
+    messageType: "std_msgs/msg/String",
+    throttle_rate: 500,
   },
 };

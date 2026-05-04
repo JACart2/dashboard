@@ -77,6 +77,11 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
             </Flex>
         }>
             <div className={styles.cardAlert}>Help Requested</div>
+            {!!cart.anomalyMessage &&
+                <div className={styles.anomalyAlert} role="alert" aria-label={`Anomaly: ${cart.anomalyMessage}`}>
+                    ⚠ {cart.anomalyMessage}
+                </div>
+            }
             <Flex vertical gap="large">
                 <div>
                     <span style={{ fontWeight: 'bold' }}>Trip Progress</span>
