@@ -36,7 +36,7 @@ if (useHTTPS) {
 const io = new Server(server, {
   cors: {
     origin: "https://35.153.174.48:8000",
-    methods: ["GET", "POST", "PUT"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
   transports: ["websocket", "polling"],
@@ -66,12 +66,12 @@ io.on("connection", (socket) => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = ["https://35.153.174.48", "http://localhost:8000"];
+      const allowedOrigins = ["http://10.247.225.41:8000", "http://localhost:8000"];
 
-      const isLocalhost = origin?.startsWith("http://localhost:");
+      const isLocalhost = origin?.startsWith("http://localhost");
 
       if (!origin || allowedOrigins.includes(origin) || isLocalhost) {
-        callback(null, origin);
+        callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
@@ -96,3 +96,4 @@ const PORT = 8000;
 server.listen(PORT, "0.0.0.0", () =>
   console.log(`Server running on port ${PORT} \n`)
 );
+
