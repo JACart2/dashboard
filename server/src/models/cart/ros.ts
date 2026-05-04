@@ -134,7 +134,7 @@ const CART_TOPICS = {
     throttle_rate: 500, // this can be changed based on bandwidth
   },
   anomaly_result: {
-    name: "ai_anomaly_logging_ui", // "/aad/alerts",
+    name: "/aad/alerts",
     messageType: "std_msgs/msg/String",
     throttle_rate: 500,
   },
