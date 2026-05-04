@@ -35,7 +35,7 @@ if (useHTTPS) {
 // Initialize WebSocket server
 const io = new Server(server, {
   cors: {
-    origin: "https://35.153.174.48:8000",
+    origin: "https://10.247.225.41:8000",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
