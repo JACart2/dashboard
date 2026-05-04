@@ -91,6 +91,7 @@ export default class ROSListener {
         console.log("______________________________________________________________________")
         console.log(message.data);
         console.log("______________________________________________________________________")
+        console.log("")
 
         const anomalyResult = message.data;
         CartUtils.editCart(this.name, { anomalyResult });
@@ -138,7 +139,7 @@ const CART_TOPICS = {
     throttle_rate: 500, // this can be changed based on bandwidth
   },
   anomaly_result: {
-    name: "ai_anomaly_logging_ui", // "/aad/alerts",
+    name: "/aad/alerts",
     messageType: "std_msgs/msg/String",
     throttle_rate: 500,
   },
