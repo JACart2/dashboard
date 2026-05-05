@@ -101,7 +101,7 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
                         <span className={styles.anomalyLabel}><FaTriangleExclamation color="#E04A3A" /> Anomaly Messages</span>
                         <ul className={styles.anomalyList}>
                             {cart.anomalyMessages.map((msg, i) => (
-                                <li key={i}>{msg}</li>
+                                <li key={`${i}-${msg}`}>{msg}</li>
                             ))}
                         </ul>
                     </div>

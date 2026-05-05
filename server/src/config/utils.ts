@@ -83,7 +83,9 @@ export namespace CartUtils {
     if (raw) {
       try {
         messages = JSON.parse(raw);
-      } catch {}
+      } catch (err) {
+        console.error(`[REDIS] Failed to parse anomalyMessages for "${name}":`, err);
+      }
     }
 
     messages.push(message);
