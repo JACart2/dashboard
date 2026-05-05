@@ -63,3 +63,27 @@
 .tripInfoCard:hover .toggleHelpRequested {
     opacity: 1;
 }
+
+.anomalyMessages {
+    margin-top: 8px;
+    border: 1px solid #E04A3A;
+    border-radius: 6px;
+    padding: 8px 10px;
+    background-color: #fff1f0;
+}
+
+.anomalyLabel {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: bold;
+    color: #E04A3A;
+    margin-bottom: 4px;
+}
+
+.anomalyList {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    color: #333;
+}

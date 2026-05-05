@@ -95,6 +95,17 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
 
                 <Progress type="dashboard" percent={speedToPercent(cart.speed)} style={{ margin: '0 auto' }} status="normal"
                     format={() => getSpeedLabel()} />
+
+                {cart.anomalyMessages && cart.anomalyMessages.length > 0 &&
+                    <div className={styles.anomalyMessages}>
+                        <span className={styles.anomalyLabel}><FaTriangleExclamation color="#E04A3A" /> Anomaly Messages</span>
+                        <ul className={styles.anomalyList}>
+                            {cart.anomalyMessages.map((msg, i) => (
+                                <li key={i}>{msg}</li>
+                            ))}
+                        </ul>
+                    </div>
+                }
             </Flex>
 
             {/* TODO: Remove when cart can request help from its UI */}

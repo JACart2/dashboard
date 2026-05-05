@@ -186,13 +186,13 @@ export default function Dashboard() {
         };
     }, [])
 
-    // Ensure that carts with help requests are shown first in list
+    // Ensure that carts with help requests or anomaly messages are shown first in list
     useMemo(() => {
         const helpRequested: Vehicle[] = [];
         const noAlerts: Vehicle[] = [];
 
         Object.values(carts).forEach(cart => {
-            if (!!cart.helpRequested) helpRequested.push(cart);
+            if (!!cart.helpRequested || (cart.anomalyMessages && cart.anomalyMessages.length > 0)) helpRequested.push(cart);
             else noAlerts.push(cart);
         })
 

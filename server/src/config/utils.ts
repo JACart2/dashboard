@@ -75,6 +75,25 @@ export namespace CartUtils {
     return filtered;
   }
 
+  // Append a new anomaly message to a cart's anomalyMessages list (capped at 20)
+  export async function appendAnomalyMessage(name: string, message: string) {
+    const raw = await redis.hGet(`vehicle:${name}`, "anomalyMessages");
+    let messages: string[] = [];
+
+    if (raw) {
+      try {
+        messages = JSON.parse(raw);
+      } catch {}
+    }
+
+    messages.push(message);
+    if (messages.length > 20) {
+      messages = messages.slice(-20);
+    }
+
+    await editCart(name, { anomalyMessages: messages });
+  }
+
   export async function deleteCart(name: string) {
     await redis.del(`vehicle:${name}`);
 
