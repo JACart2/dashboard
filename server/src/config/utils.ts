@@ -67,7 +67,7 @@ export namespace CartUtils {
 
     await redisPub.publish(
       "vehicles",
-      JSON.stringify({ name: name, data: filtered })
+      JSON.stringify({ name: name, data: { ...filtered, name: name } })
     );
 
     // console.log(`[REDIS] "${name}" modified:`, filtered);
