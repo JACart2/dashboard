@@ -42,6 +42,14 @@ vehicleRouter.post("/register/", async (req, res) => {
   res.json({ name, url });
 });
 
+// Publish vehicle update to notify dashboard
+const vehicleData = await redis.hGetAll(`vehicle:${name}`);
+const parsedData = Utils.parseData(vehicleData);
+await redisPub.publish("vehicles", JSON.stringify({
+  name: name,
+  data: parsedData
+}));
+
 // Retrieve list of all currently registered carts
 vehicleRouter.get("/", async (req, res) => {
   let keys = await redis.keys("vehicle:*");
