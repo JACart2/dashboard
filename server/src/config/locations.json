@@ -1,0 +1,47 @@
+[
+  {
+    "name": "festival",
+    "displayName": "Festival",
+    "lat": 38.432605,
+    "long": -78.860067,
+    "url": "https://map.jmu.edu/?id=1869#!m/592720"
+  },
+  {
+    "name": "pod",
+    "displayName": "P.O.D in Engeo",
+    "lat": 38.433928,
+    "long": -78.862181,
+    "url": "https://map.jmu.edu/?id=1869#!m/623291"
+  },
+  {
+    "name": "chesapeake hall",
+    "displayName": "Chesapeake Hall",
+    "lat": 38.432401,
+    "long": -78.861934,
+    "url": "https://map.jmu.edu/?id=1869#!m/576622"
+  },
+  {
+    "name": "king hall",
+    "displayName": "King Hall",
+    "lat": 38.434257,
+    "long": -78.864156,
+    "url": "https://map.jmu.edu/?id=1869#!m/576605",
+    "disabled": false
+  },
+  {
+    "name": "paul jennings hall",
+    "displayName": "Paul Jennings Hall",
+    "lat": 38.430546,
+    "long": -78.865645,
+    "url": "https://map.jmu.edu/?id=1869#!m/593002",
+    "disabled": false
+  },
+  {
+    "name": "E-hall",
+    "displayName": "E-Hall",
+    "lat": 38.431657,
+    "long": -78.860881,
+    "url": "https://map.jmu.edu/?id=1869#!m/622822",
+    "disabled": false
+  }
+]
