@@ -1,6 +1,7 @@
 import * as ROSLIB from "roslib";
 import CameraSubManager from "../../config/camera-subs";
 import { CartUtils, Transform } from "../../config/utils";
+import locations from "../../config/locations.json";
 
 // A utility class that handles a cart's ROS connection
 export default class ROSListener {
@@ -69,9 +70,24 @@ export default class ROSListener {
     });
 
     this.topics["clicked_point"].subscribe((message: any) => {
-      // console.log(`[ROS] Received 'clicked_point':`, message);
+      console.log(`[ROS] Received 'clicked_point':`, message);
+    
+      const point = message?.point;
+    
+      if (!point) return;
+    
+      const longitude = point.x;
+      const latitude = point.y;
+    
+      const location = getClosestLocation(longitude, latitude);
+    
+      CartUtils.editCart(this.name, {
+        startLocation: "Current location",
+        endLocation: location?.displayName ?? `Point (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`,
+        tripProgress: 0,
+      });
     });
-
+    
     this.topics["zed_rear"].subscribe((message: any) => {
       // console.log(`[ROS] Received 'zed_rear':`, message);
 
@@ -101,6 +117,45 @@ export default class ROSListener {
     }
   }
 }
+
+// Helper for location
+type LocationEntry = {
+  name: string;
+  displayName: string;
+  lat: number;
+  long: number;
+  url?: string;
+  disabled?: boolean;
+};
+
+const DESTINATION_MATCH_THRESHOLD = 0.00025;
+
+function getClosestLocation(longitude: number, latitude: number): LocationEntry | null {
+  const enabledLocations = (locations as LocationEntry[]).filter(
+    (location) => location.disabled !== true
+  );
+
+  let closestLocation: LocationEntry | null = null;
+  let closestDistance = Infinity;
+
+  for (const location of enabledLocations) {
+    const dx = longitude - location.long;
+    const dy = latitude - location.lat;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < closestDistance) {
+      closestLocation = location;
+      closestDistance = distance;
+    }
+  }
+
+  if (closestDistance > DESTINATION_MATCH_THRESHOLD) {
+    return null;
+  }
+
+  return closestLocation;
+}
+
 
 const CART_TOPICS = {
   visual_path: {
