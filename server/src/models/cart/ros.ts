@@ -83,7 +83,7 @@ export default class ROSListener {
     
       CartUtils.editCart(this.name, {
         startLocation: "Current location",
-        endLocation: location?.displayName ?? `Point (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`,
+        endLocation: "Selected destination",
         tripProgress: 0,
       });
     });
