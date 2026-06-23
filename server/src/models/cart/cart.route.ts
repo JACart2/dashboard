@@ -32,16 +32,18 @@ vehicleRouter.post("/register/", async (req, res) => {
 
   console.log(`[ROS] Registering "${name}" to ${url}`, "\n");
 
-  if (!(await redis.exists(`vehicle:${name}`))) {
+  const existingVehicle = Utils.parseData(
+    await redis.hGetAll(`vehicle:${name}`)
+  );
+	
     await CartUtils.editCart(name, {
-      name,
-      speed: 0,
-      tripProgress: 0,
-      startLocation: "Starting point",
-      endLocation: "Ending point",
-      helpRequested: false,
-    });
-  }
+	  name,
+	  speed: existingVehicle.speed ?? 0,
+	  tripProgress: existingVehicle.tripProgress ?? 0,
+	  startLocation: existingVehicle.startLocation ?? "Starting point",
+	  endLocation: existingVehicle.endLocation ?? "Ending point",
+	  helpRequested: existingVehicle.helpRequested ?? false,
+  });
 
   ROSListener.listeners[name] = new ROSListener(url, name);
 
