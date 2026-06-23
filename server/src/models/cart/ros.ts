@@ -73,7 +73,6 @@ export default class ROSListener {
 
       // Do not update startLocation/endLocation here.
       // The UI repo sends the real selected destination name to the dashboard API.
-});
     });
     
     this.topics["zed_rear"].subscribe((message: any) => {
