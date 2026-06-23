@@ -1,7 +1,6 @@
 import * as ROSLIB from "roslib";
 import CameraSubManager from "../../config/camera-subs";
 import { CartUtils, Transform } from "../../config/utils";
-import locations from "../../config/locations.json";
 
 // A utility class that handles a cart's ROS connection
 export default class ROSListener {
@@ -71,16 +70,10 @@ export default class ROSListener {
 
     this.topics["clicked_point"].subscribe((message: any) => {
       console.log(`[ROS] Received 'clicked_point':`, message);
-    
-      const point = message?.point;
-    
-      if (!point) return;
 
-      CartUtils.editCart(this.name, {
-        startLocation: "Current location",
-        endLocation: "Selected destination",
-        tripProgress: 0,
-      });
+      // Do not update startLocation/endLocation here.
+      // The UI repo sends the real selected destination name to the dashboard API.
+});
     });
     
     this.topics["zed_rear"].subscribe((message: any) => {
