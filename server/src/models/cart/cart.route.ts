@@ -95,7 +95,7 @@ vehicleRouter.post("/", async (req, res) => {
 
 // Update a cart given its name
 vehicleRouter.put("/:name/", async (req, res) => {
-  const result = CartUtils.editCart(req.params.name, req.body);
+  const result = await CartUtils.editCart(req.params.name, req.body);
 
   res.json(result);
 });
