@@ -79,7 +79,7 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
             <Flex vertical gap="large">
                 <div>
                     <span style={{ fontWeight: 'bold' }}>Trip Progress</span>
-                    <Progress type="line" percent={cart.tripProgress} />
+                    <Progress type="line" percent={cart.tripProgress ?? 0} />
 
                     {!!cart.startLocation && !!cart.endLocation &&
                         <Flex align="center" style={{ gap: '4px' }}>
