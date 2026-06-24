@@ -46,7 +46,7 @@ export default class ROSListener {
   subscribeToTopics(): void {
     // Decode and emit incoming camera frames
     this.topics["compressed_image"].subscribe((message) => {
-      console.log(`[ROS] Received 'compressed_image':`, message);
+      // console.log(`[ROS] Received 'compressed_image':`, message);
 
       const url = CameraSubManager.encodeBase64(message?.["data"]);
       CameraSubManager.emitFrame(this.name, url);
@@ -61,30 +61,47 @@ export default class ROSListener {
     });
 
     this.topics["visual_path"].subscribe((message: any) => {
-      console.log(`[ROS] Received 'visual_path':`, message);
+      // console.log(`[ROS] Received 'visual_path':`, message);
     });
 
     this.topics["vehicle_state"].subscribe((message: any) => {
-      console.log(`[ROS] Received 'vehicle_state':`, message);
+      // console.log(`[ROS] Received 'vehicle_state':`, message);
     });
 
     this.topics["clicked_point"].subscribe((message: any) => {
       console.log(`[ROS] Received 'clicked_point':`, message);
-    });
 
+      // Do not update startLocation/endLocation here.
+      // The UI repo sends the real selected destination name to the dashboard API.
+    });
+    
     this.topics["zed_rear"].subscribe((message: any) => {
-      console.log(`[ROS] Received 'zed_rear':`, message);
+      // console.log(`[ROS] Received 'zed_rear':`, message);
 
       const url = CameraSubManager.encodeBase64(message?.["data"]);
       CameraSubManager.emitFrame(this.name, url);
     });
 
     this.topics["nav_cmd"].subscribe((message) => {
-      console.log(`[ROS] Received 'nav_cmd':`, message);
+      // console.log(`[ROS] Received 'nav_cmd':`, message);
 
       const speed = message?.["vel"];
       CartUtils.editCart(this.name, { speed });
     });
+    try {
+      this.topics["anomaly_result"].subscribe((message: any) => {
+        console.log("                      INCOMING ANOMALY MESSAGE")
+        console.log("______________________________________________________________________")
+        console.log(message.data);
+        console.log("______________________________________________________________________")
+        console.log("")
+
+        const anomalyResult = message.data;
+        CartUtils.editCart(this.name, { anomalyResult });
+      });
+    } catch (e) {
+      console.error(`[ROS] Failed to subscribe to 'anomaly_result':`, e);
+    }
   }
 }
 
@@ -92,10 +109,12 @@ const CART_TOPICS = {
   visual_path: {
     name: "/visual_path",
     messageType: "visualization_msgs/msg/MarkerArray",
+    throttle_rate: 500,
   },
   limited_pose: {
     name: "/pcl_pose",
     messageType: "geometry_msgs/msg/PoseWithCovarianceStamped",
+    throttle_rate: 500,
   },
   vehicle_state: {
     name: "/vehicle_state",
@@ -105,6 +124,7 @@ const CART_TOPICS = {
   clicked_point: {
     name: "/clicked_point",
     messageType: "geometry_msgs/msg/PointStamped",
+    throttle_rate: 500,
   },
   compressed_image: {
     name: "/zed_front/zed_node_0/right_raw/image_raw_color/compressed",
@@ -114,10 +134,16 @@ const CART_TOPICS = {
   zed_rear: {
     name: "/zed/zed_node/rgb/image_raw_color/compressed",
     messageType: "sensor_msgs/msg/Image",
+    throttle_rate: 500,
   },
   nav_cmd: {
     name: "/nav_cmd",
     messageType: "motor_control_interface/msg/VelAngle",
     throttle_rate: 500, // this can be changed based on bandwidth
+  },
+  anomaly_result: {
+    name: "/aad/alerts",
+    messageType: "std_msgs/msg/String",
+    throttle_rate: 500,
   },
 };

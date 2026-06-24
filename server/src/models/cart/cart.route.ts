@@ -32,12 +32,20 @@ vehicleRouter.post("/register/", async (req, res) => {
 
   console.log(`[ROS] Registering "${name}" to ${url}`, "\n");
 
-  if (!(await redis.exists(`vehicle:${name}`))) {
-    await CartUtils.editCart(name, { name: name });
-    const rosListener = new ROSListener(url, name);
-  } else {
-    ROSListener.listeners[name] = new ROSListener(url, name);
-  }
+  const existingVehicle = Utils.parseData(
+    await redis.hGetAll(`vehicle:${name}`)
+  );
+	
+    await CartUtils.editCart(name, {
+	  name,
+	  speed: existingVehicle.speed ?? 0,
+	  tripProgress: existingVehicle.tripProgress ?? 0,
+	  startLocation: existingVehicle.startLocation ?? "Starting point",
+	  endLocation: existingVehicle.endLocation ?? "Ending point",
+	  helpRequested: existingVehicle.helpRequested ?? false,
+  });
+
+  ROSListener.listeners[name] = new ROSListener(url, name);
 
   res.json({ name, url });
 });
@@ -57,8 +65,8 @@ vehicleRouter.get("/", async (req, res) => {
         const data = await redis.hGetAll(key);
 
         const parsedData = Utils.parseData(data);
-
-        return { ...parsedData };
+	
+	return { name: key.replace("vehicle:", ""), ...parsedData };
       } catch (err) {
         console.log(err.message);
       }
@@ -89,7 +97,7 @@ vehicleRouter.post("/", async (req, res) => {
 
 // Update a cart given its name
 vehicleRouter.put("/:name/", async (req, res) => {
-  const result = CartUtils.editCart(req.params.name, req.body);
+  const result = await CartUtils.editCart(req.params.name, req.body);
 
   res.json(result);
 });
@@ -122,7 +130,7 @@ vehicleRouter.post("/:name/toggle-help", async (req, res) => {
   const helpRequested = req.body?.helpRequested ?? !vehicle.helpRequested;
 
   const result = await CartUtils.editCart(name, {
-    helpRequested: helpRequested,
+    helpRequested,
   });
 
   res.json(result);

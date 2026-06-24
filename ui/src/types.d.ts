@@ -7,6 +7,7 @@ export interface Vehicle {
   endLocation: string;
   imgData?: string;
   helpRequested?: boolean;
+  anomalyResult?: string;
 }
 
 export interface VehicleMap {
