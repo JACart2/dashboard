@@ -8,6 +8,16 @@ const CartModel = Object.freeze({
   endLocation: null as string,
   helpRequested: null as boolean,
   anomalyResult: null as string,
+
+  // Dashboard monitoring/logging fields
+  logs: null as {
+    timestamp: string;
+    level: "info" | "warn" | "error" | "debug";
+    source?: string;
+    message: string;
+  }[],
+
+  aiLogSummary: null as string,
 });
 
 export default CartModel;

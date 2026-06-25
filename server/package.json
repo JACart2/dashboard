@@ -5,10 +5,10 @@
   "main": "server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "concurrently \"redis6-server redis.conf\" \"npm run serve\"",
-    "dev": "concurrently \"redis6-server redis.conf\" \"npm run serve:watch\"",
-    "dev:osx": "concurrently \"redis-server redis.conf\" \"npm run serve:watch\"",
-    "dev:windows": "concurrently \"memurai-cli flushdb\" \"memurai-cli CONFIG SET appendonly no save \"\"\" \"npm run serve:watch\" ",
+    "start": "concurrently -n REDIS,SERVER -c red,blue \"redis6-server redis.conf\" \"npm run serve\"",
+    "dev": "concurrently -n REDIS,SERVER -c red,blue \"redis6-server redis.conf\" \"npm run serve:watch\"",
+    "dev:osx": "concurrently -n REDIS,SERVER -c red,blue \"redis-server redis.conf\" \"npm run serve:watch\"",
+    "dev:windows": "concurrently -n REDIS,SERVER -c red,blue \"memurai-cli flushdb\" \"memurai-cli CONFIG SET appendonly no save \\\"\\\"\" \"npm run serve:watch\"",
     "serve": "tsx src/server.ts",
     "serve:watch": "tsx watch src/server.ts"
   },

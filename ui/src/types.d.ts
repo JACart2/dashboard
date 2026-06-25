@@ -10,11 +10,12 @@ export interface Vehicle {
   speed?: number;
   tripProgress?: number;
   longLat?: [number, number];
-  startLocation: string;
-  endLocation: string;
+  startLocation?: string;
+  endLocation?: string;
   imgData?: string;
   helpRequested?: boolean;
   anomalyResult?: string;
+  visualPath?: number[][];
   logs?: CartLogEntry[];
   aiLogSummary?: string;
 }

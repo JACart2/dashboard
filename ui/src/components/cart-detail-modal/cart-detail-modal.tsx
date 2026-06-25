@@ -1,8 +1,8 @@
-import { Empty, Modal, Tabs, Typography } from "antd";
-import type { Vehicle } from "../../types";
+import { Empty, Modal, Tabs, Typography, Tag } from "antd";
+import type { CartLogEntry, Vehicle } from "../../types";
 import styles from "./cart-detail-modal.module.css";
 
-const { Text } = Typography;
+const { Text, Paragraph } = Typography;
 
 interface CartDetailModalProps {
   cart?: Vehicle;
@@ -17,6 +17,10 @@ export default function CartDetailModal({
   onClose,
   cartImage,
 }: CartDetailModalProps) {
+
+  console.log("[CartDetailModal] cart:", cart);
+  console.log("[CartDetailModal] open:", open);
+
   if (!cart) return null;
 
   return (
@@ -43,13 +47,13 @@ export default function CartDetailModal({
           },
           {
             key: "logs",
-            label: "Logs",
+            label: "Logs & Events",
             children: <CartLogs cart={cart} />,
           },
           {
-            key: "ai-summary",
-            label: "AI Summary",
-            children: <CartAISummary cart={cart} />,
+            key: "ai",
+            label: "AI",
+            children: <CartAI cart={cart} />,
           },
         ]}
       />
@@ -60,20 +64,14 @@ export default function CartDetailModal({
 function CartOverview({ cart }: { cart: Vehicle }) {
   return (
     <div className={styles.overviewGrid}>
-      <div>
-        <Text strong>Cart Name:</Text>
-        <div>{cart.name}</div>
-      </div>
+      <InfoBlock label="Cart Name" value={cart.name} />
 
-      <div>
-        <Text strong>Speed:</Text>
-        <div>{cart.speed == null ? "N/A" : `${cart.speed.toFixed(2)} mph`}</div>
-      </div>
+      <InfoBlock
+        label="Speed"
+        value={cart.speed == null ? "N/A" : `${cart.speed.toFixed(2)} mph`}
+      />
 
-      <div>
-        <Text strong>Trip Progress:</Text>
-        <div>{cart.tripProgress ?? 0}%</div>
-      </div>
+      <InfoBlock label="Trip Progress" value={`${cart.tripProgress ?? 0}%`} />
 
       <div>
         <Text strong>Route:</Text>
@@ -85,22 +83,48 @@ function CartOverview({ cart }: { cart: Vehicle }) {
 
       <div>
         <Text strong>Help Requested:</Text>
-        <div>{cart.helpRequested ? "Yes" : "No"}</div>
+        <div>
+          {cart.helpRequested ? (
+            <Tag color="orange">YES</Tag>
+          ) : (
+            <Tag color="green">NO</Tag>
+          )}
+        </div>
       </div>
 
       <div>
         <Text strong>Anomaly:</Text>
-        <div>{cart.anomalyResult ?? "None"}</div>
-      </div>
-
-      <div>
-        <Text strong>Location:</Text>
         <div>
-          {cart.longLat
-            ? `${cart.longLat[1]}, ${cart.longLat[0]}`
-            : "No location available"}
+          {cart.anomalyResult ? (
+            <Tag color="red">{cart.anomalyResult}</Tag>
+          ) : (
+            <Tag color="green">None</Tag>
+          )}
         </div>
       </div>
+
+      <InfoBlock
+        label="Location"
+        value={
+          cart.longLat
+            ? `${cart.longLat[1].toFixed(6)}, ${cart.longLat[0].toFixed(6)}`
+            : "No location available"
+        }
+      />
+
+      <InfoBlock
+        label="Logs Stored"
+        value={`${cart.logs?.length ?? 0}`}
+      />
+    </div>
+  );
+}
+
+function InfoBlock({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <Text strong>{label}:</Text>
+      <div>{value}</div>
     </div>
   );
 }
@@ -133,27 +157,84 @@ function CartLogs({ cart }: { cart: Vehicle }) {
   const logs = cart.logs ?? [];
 
   if (logs.length === 0) {
-    return <Empty description="No cart logs received yet" />;
+    return <Empty description="No cart logs or events received yet" />;
   }
 
   return (
     <div className={styles.logsPanel}>
       {logs.map((log, index) => (
-        <div key={index} className={styles.logLine}>
-          <span>[{log.timestamp}] </span>
-          <span>[{log.level.toUpperCase()}] </span>
-          {log.source && <span>[{log.source}] </span>}
-          <span>{log.message}</span>
+        <div key={`${log.timestamp}-${index}`} className={styles.logLine}>
+          <div className={styles.logHeader}>
+            <Tag color={getLogLevelColor(log.level)}>
+              {log.level.toUpperCase()}
+            </Tag>
+
+            {log.source && <Text strong>{log.source}</Text>}
+
+            <Text type="secondary" className={styles.logTimestamp}>
+              {formatTimestamp(log.timestamp)}
+            </Text>
+          </div>
+
+          <div className={styles.logMessage}>{log.message}</div>
         </div>
       ))}
     </div>
   );
 }
 
-function CartAISummary({ cart }: { cart: Vehicle }) {
-  if (!cart.aiLogSummary) {
-    return <Empty description="AI log summary not connected yet" />;
+function CartAI({ cart }: { cart: Vehicle }) {
+  const logs = cart.logs ?? [];
+
+  return (
+    <div className={styles.aiPanel}>
+      <div className={styles.aiSummaryBox}>
+        <Text strong>AI Log Summary</Text>
+
+        {cart.aiLogSummary ? (
+          <Paragraph className={styles.aiSummaryText}>
+            {cart.aiLogSummary}
+          </Paragraph>
+        ) : (
+          <Empty description="AI log summary not connected yet" />
+        )}
+      </div>
+
+      <div className={styles.aiInputsBox}>
+        <Text strong>Future AI Inputs</Text>
+
+        <ul>
+          <li>Recent cart logs: {logs.length}</li>
+          <li>Current destination: {cart.endLocation ?? "Unknown"}</li>
+          <li>Help requested: {cart.helpRequested ? "Yes" : "No"}</li>
+          <li>Anomaly result: {cart.anomalyResult ?? "None"}</li>
+          <li>Current speed: {cart.speed == null ? "N/A" : cart.speed}</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function getLogLevelColor(level: CartLogEntry["level"]) {
+  switch (level) {
+    case "error":
+      return "red";
+    case "warn":
+      return "yellow";
+    case "debug":
+      return "purple";
+    case "info":
+    default:
+      return "blue";
+  }
+}
+
+function formatTimestamp(timestamp: string) {
+  const date = new Date(timestamp);
+
+  if (Number.isNaN(date.getTime())) {
+    return timestamp;
   }
 
-  return <div className={styles.aiSummary}>{cart.aiLogSummary}</div>;
+  return date.toLocaleString();
 }

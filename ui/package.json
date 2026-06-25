@@ -7,7 +7,11 @@
   "scripts": {
     "predeploy": "pnpm run build",
     "deploy": "gh-pages -d dist",
-    "dev": "vite  build --watch --mode dev",
+
+    "dev": "concurrently -n UI,SERVER -c green,blue \"npm run dev:ui\" \"npm run dev:server\"",
+    "dev:ui": "vite --host 0.0.0.0 --port 5173 --mode dev",
+    "dev:server": "npm run dev --prefix server",
+
     "build": "tsc -b && vite build --emptyOutDir",
     "build:watch": "vite build --watch",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
@@ -24,7 +28,7 @@
     "pmtiles": "^4.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-icons": "^5.4.0",
+    "react-icons": "^5.4.1",
     "react-router-dom": "^7.1.5",
     "socket.io-client": "^4.8.1",
     "vite": "^6.2.0"
@@ -36,6 +40,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "concurrently": "^9.1.2",
     "eslint": "^8.45.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",

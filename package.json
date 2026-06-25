@@ -1,5 +1,17 @@
 {
-	"dependencies": {
-		"react-oidc-context": "^3.3.0"
-	}
+  "name": "dashboard-dev",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n UI,SERVER -c green,blue \"npm run dev:ui\" \"npm run dev:server\"",
+    "dev:ui": "npm run dev --prefix ui",
+    "dev:server": "npm run dev --prefix server"
+  },
+  "dependencies": {
+    "react-oidc-context": "^3.3.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
 }
