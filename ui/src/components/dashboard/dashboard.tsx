@@ -2,14 +2,14 @@ import { Flex, Layout } from "antd";
 import { Content, Header } from "antd/es/layout/layout";
 import styles from "./dashboard.module.css";
 import "maplibre-gl/dist/maplibre-gl.css";
+import CartDetailModal from "../cart-detail-modal/cart-detail-modal";
 
-import { lazy, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, useEffect, useRef, useState } from "react";
 import { Protocol } from "pmtiles";
 import maplibregl, { Marker } from "maplibre-gl";
 import { vehicleSocket } from "../../services/vehicleSocket";
 import { vehicleService } from "../../services/vehicleService";
 import { Vehicle, VehicleMap } from "../../types";
-import { Modal } from "antd"
 
 const TripInfoCard = lazy(() => import("../trip-info-card/trip-info-card"));
 
@@ -23,6 +23,10 @@ export default function Dashboard() {
     const [cartImage, setCartImage] = useState<string>('')
     const [selectedCart, setSelectedCart] = useState<string>("");
 
+    const selectedCartData = selectedCart
+    ? carts[selectedCart]
+    : undefined;
+
     const showModal = (cartName: string) => {
         setSelectedCart(cartName)
         setIsModalOpen(true);
@@ -33,8 +37,13 @@ export default function Dashboard() {
 
     const handleCancel = () => {
         setIsModalOpen(false);
-        vehicleSocket.unsubscribeCamera(selectedCart);
+
+        if (selectedCart) {
+            vehicleSocket.unsubscribeCamera(selectedCart);
+        }
+
         setSelectedCart("");
+        setCartImage("");
     };
 
     function updateCart(name: string, data: Vehicle) {
@@ -58,7 +67,7 @@ export default function Dashboard() {
     }
 
     const vehicleSocketCallback = (res: any) => {
-        console.log("Update: ", res)
+        console.log("[Vehicle Socket Update]:", res);
         if (res.deleted) {
             deleteCart(res.name);
         } else {
@@ -77,6 +86,64 @@ export default function Dashboard() {
 
     function addVehicle() {
         vehicleService.createTestVehicle();
+    }
+
+    function ensureVisualPathLayer() {
+        if (!map.current) return;
+
+        if (!map.current.getSource("visual_path")) {
+            map.current.addSource("visual_path", {
+                type: "geojson",
+                data: {
+                    type: "Feature",
+                    geometry: {
+                        type: "LineString",
+                        coordinates: [],
+                    },
+                    properties: {},
+                },
+            });
+        }
+
+        if (!map.current.getLayer("visual_path")) {
+            map.current.addLayer({
+                id: "visual_path",
+                type: "line",
+                source: "visual_path",
+                layout: {
+                    "line-join": "round",
+                    "line-cap": "round",
+                },
+                paint: {
+                    "line-color": "#1677ff",
+                    "line-width": 5,
+                    "line-opacity": 0.9,
+                },
+            });
+        }
+    }
+
+    function updateVisualPath(path?: number[][]) {
+        if (!map.current) return;
+
+        ensureVisualPathLayer();
+
+        const source = map.current.getSource("visual_path") as maplibregl.GeoJSONSource | undefined;
+
+        if (!source) return;
+
+        if (!path || path.length < 2) {
+            return;
+        }
+
+        source.setData({
+            type: "Feature",
+            geometry: {
+                type: "LineString",
+                coordinates: path,
+            },
+            properties: {},
+        });
     }
 
     function addMarker(cart: Vehicle) {
@@ -137,6 +204,23 @@ export default function Dashboard() {
     }, [carts])
 
     useEffect(() => {
+        if (!map.current) return;
+
+        const selectedCartData = selectedCart
+            ? carts[selectedCart]
+            : undefined;
+
+        const cartWithPath =
+            selectedCartData?.visualPath
+                ? selectedCartData
+                : Object.values(carts).find(cart => cart.visualPath && cart.visualPath.length >= 2);
+
+        if (!cartWithPath?.visualPath) return;
+
+        updateVisualPath(cartWithPath.visualPath);
+    }, [carts, selectedCart]);
+
+    useEffect(() => {
         // this needs to change even
         // const vehicles: VehicleMap = {
         //     "James": {
@@ -163,9 +247,19 @@ export default function Dashboard() {
 
         vehicleService.getVehicles().then((vehicles) => {
             console.log("Vehicles: ", vehicles);
-            setCarts(vehicles as VehicleMap)
-        })
-        vehicleSocket.subscribe(vehicleSocketCallback);
+
+            if (Array.isArray(vehicles)) {
+                const vehicleMap = vehicles.reduce((acc, vehicle) => {
+                    acc[vehicle.name] = vehicle;
+                    return acc;
+                }, {} as VehicleMap);
+
+                setCarts(vehicleMap);
+            } else {
+                setCarts(vehicles as VehicleMap);
+            }
+        });
+            vehicleSocket.subscribe(vehicleSocketCallback);
 
         const protocol = new Protocol();
         maplibregl.addProtocol("pmtiles", protocol.tile);
@@ -174,6 +268,10 @@ export default function Dashboard() {
             style: "/basic_map.json",
             center: [-78.861814, 38.433129],
             zoom: 15,
+        });
+
+        map.current.on("load", () => {
+            ensureVisualPathLayer();
         });
 
         const nav = new maplibregl.NavigationControl();
@@ -187,17 +285,17 @@ export default function Dashboard() {
     }, [])
 
     // Ensure that carts with help requests are shown first in list
-    useMemo(() => {
+    useEffect(() => {
         const helpRequested: Vehicle[] = [];
         const noAlerts: Vehicle[] = [];
 
         Object.values(carts).forEach(cart => {
             if (!!cart.helpRequested) helpRequested.push(cart);
             else noAlerts.push(cart);
-        })
+        });
 
         setSortedCarts([...helpRequested, ...noAlerts]);
-    }, [carts])
+    }, [carts]);
 
     return (
         <Layout className={styles.dashboardContainer}>
@@ -217,20 +315,14 @@ export default function Dashboard() {
                             <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name} onClick={(cart: Vehicle) => handleModal(cart)}></TripInfoCard>
                         ))}
                     </Flex>
-                    <div ref={mapRef} id={styles.map} >
-                        <Modal
-                            title="Cart Details"
-                            open={isModalOpen}
-                            onCancel={handleCancel}
-                            closable={false}
-                            centered
-                        >
-                            <Flex vertical align="center">
-                                <img style={{ width: '256px', aspectRatio: 1 }} src={cartImage}></img>
-                            </Flex>
-                        </Modal>
-                    </div>
-
+                        <div ref={mapRef} id={styles.map}>
+                            <CartDetailModal
+                                open={isModalOpen}
+                                onClose={handleCancel}
+                                cart={selectedCartData}
+                                cartImage={cartImage}
+                            />
+                        </div>
                 </Flex>
 
             </Content>

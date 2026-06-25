@@ -1,3 +1,10 @@
+export interface CartLogEntry {
+  timestamp: string;
+  level: "info" | "warn" | "error" | "debug";
+  source?: string;
+  message: string;
+}
+
 export interface Vehicle {
   name: string;
   speed?: number;
@@ -8,6 +15,8 @@ export interface Vehicle {
   imgData?: string;
   helpRequested?: boolean;
   anomalyResult?: string;
+  logs?: CartLogEntry[];
+  aiLogSummary?: string;
 }
 
 export interface VehicleMap {

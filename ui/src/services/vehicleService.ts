@@ -57,21 +57,21 @@ export const vehicleService = {
   },
 
   getVehicle(name: string) {
-    return fetch(this.BASE_URL + name, {
+    return fetch(`${this.BASE_URL}${encodeURIComponent(name)}/`, {
       method: "GET",
       credentials: "include",
     });
   },
 
   deleteVehicle(name: string) {
-    return fetch(this.BASE_URL + name, {
+    return fetch(`${this.BASE_URL}${encodeURIComponent(name)}/`, {
       method: "DELETE",
       credentials: "include",
     });
   },
 
   editVehicle(name: string, data: Partial<Vehicle>) {
-    return fetch(this.BASE_URL + name, {
+    return fetch(`${this.BASE_URL}${encodeURIComponent(name)}/`, {
       method: "PUT",
       credentials: "include",
       headers: {
@@ -80,7 +80,37 @@ export const vehicleService = {
       body: JSON.stringify(data),
     });
   },
+
+  async requestHelp(
+    name: string,
+    helpRequested?: boolean
+  ): Promise<{ helpRequested: boolean }> {
+    const url = `${this.BASE_URL}${encodeURIComponent(name)}/toggle-help`;
+
+    console.log("[Help Requested] request:", url, { helpRequested });
+
+    const res = await fetch(url, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        helpRequested,
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(
+        `Help request failed: ${res.status} ${res.statusText}: ${body}`
+      );
+    }
+
+    return res.json();
+  },
 };
+  
 
 function generateRandomLetters(length: number): string {
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
