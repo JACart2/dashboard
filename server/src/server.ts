@@ -13,6 +13,15 @@ import CameraSubManager from "./config/camera-subs";
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
+const envPath = path.resolve(__dirname, "../.env");
+const dotenvResult = dotenv.config({ path: envPath });
+
+console.log("[ENV] Loading env from:", envPath);
+console.log("[ENV] dotenv error:", dotenvResult.error);
+console.log("[ENV] SSL_KEY_PATH:", process.env.SSL_KEY_PATH);
+console.log("[ENV] SSL_CERT_PATH:", process.env.SSL_CERT_PATH);
+
+
 const useHTTPS = !!process.env.SSL_KEY_PATH && !!process.env.SSL_CERT_PATH;
 const app = express();
 let server;
@@ -66,7 +75,11 @@ io.on("connection", (socket) => {
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = ["http://10.247.225.41:8000", "http://localhost:8000"];
+      const allowedOrigins = [
+        "http://localhost:5174",
+        "http://10.247.225.41:5174",
+        "http://10.247.225.41:8000",
+      ];
 
       const isLocalhost = origin?.startsWith("http://localhost");
 
