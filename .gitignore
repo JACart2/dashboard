@@ -7,3 +7,6 @@ server/.env
 
 ui/dist
 ui/.env
+
+certs/*.key
+certs/dashboard.key
