@@ -26,8 +26,19 @@ const useHTTPS = !!process.env.SSL_KEY_PATH && !!process.env.SSL_CERT_PATH;
 const app = express();
 let server;
 
+// Shared CORS allowlist for Express and Socket.IO
+const allowedOrigins = [
+  "http://localhost:5174",
+  "https://localhost:5174",
+
+  "http://10.247.225.41:5174",
+  "https://10.247.225.41:5174",
+
+  "http://10.247.225.41:8000",
+  "https://10.247.225.41:8000",
+];
+
 // If SSL key/cert files are provided, we start the server as HTTPS
-// This enables Amazon Cognito, but we want to stick to HTTP for local development
 if (useHTTPS) {
   console.log("STARTING HTTPS SERVER");
   const httpsOptions: ServerOptions = {
@@ -44,7 +55,7 @@ if (useHTTPS) {
 // Initialize WebSocket server
 const io = new Server(server, {
   cors: {
-    origin: "https://10.247.225.41:8000",
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
@@ -71,22 +82,17 @@ io.on("connection", (socket) => {
 });
 
 // Define CORS rules for the server
-// Make sure that the server's IP is in "allowedOrigins"
 app.use(
   cors({
     origin: (origin, callback) => {
-      const allowedOrigins = [
-        "http://localhost:5174",
-        "http://10.247.225.41:5174",
-        "http://10.247.225.41:8000",
-      ];
-
-      const isLocalhost = origin?.startsWith("http://localhost");
+      const isLocalhost =
+        origin?.startsWith("http://localhost") ||
+        origin?.startsWith("https://localhost");
 
       if (!origin || allowedOrigins.includes(origin) || isLocalhost) {
         callback(null, true);
       } else {
-        callback(new Error("Not allowed by CORS"));
+        callback(new Error(`Not allowed by CORS: ${origin}`));
       }
     },
     credentials: true,

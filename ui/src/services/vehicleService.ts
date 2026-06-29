@@ -1,6 +1,6 @@
 import { Vehicle, VehicleMap } from "../types";
 
-const API_ROOT = import.meta.env.VITE_API_ROOT ?? "http://localhost:8000/api/";
+const API_ROOT = import.meta.env.VITE_API_ROOT ?? "/api";
 
 export const vehicleService = {
   BASE_URL: API_ROOT + "vehicles/",
