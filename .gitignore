@@ -10,3 +10,4 @@ ui/.env
 
 certs/*.key
 certs/dashboard.key
+certs/dashboard.crt
