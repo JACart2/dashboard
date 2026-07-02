@@ -8,14 +8,17 @@ interface CartDetailModalProps {
   cart?: Vehicle;
   open: boolean;
   onClose: () => void;
-  cartImage?: string;
+  cartImages?: {
+    front?: string;
+    rear?: string;
+  };
 }
 
 export default function CartDetailModal({
   cart,
   open,
   onClose,
-  cartImage,
+  cartImages,
 }: CartDetailModalProps) {
 
   console.log("[CartDetailModal] cart:", cart);
@@ -43,7 +46,7 @@ export default function CartDetailModal({
           {
             key: "camera",
             label: "Camera",
-            children: <CartCamera cart={cart} cartImage={cartImage} />,
+            children: <CartCamera cart={cart} cartImages={cartImages} />,
           },
           {
             key: "logs",
@@ -131,24 +134,48 @@ function InfoBlock({ label, value }: { label: string; value: string }) {
 
 function CartCamera({
   cart,
-  cartImage,
+  cartImages,
 }: {
   cart: Vehicle;
-  cartImage?: string;
+  cartImages?: {
+    front?: string;
+    rear?: string;
+  };
 }) {
-  const imageSrc = cartImage || cart.imgData;
+  const frontImage = cartImages?.front;
+  const rearImage = cartImages?.rear;
 
-  if (!imageSrc) {
-    return <Empty description="No camera feed available" />;
+  if (!frontImage && !rearImage) {
+    return <Empty description={`Waiting for ${cart.name} camera feeds...`} />;
   }
 
   return (
-    <div className={styles.cameraPanel}>
-      <img
-        src={imageSrc}
-        alt={`${cart.name} camera feed`}
-        className={styles.cameraImage}
-      />
+    <div className={styles.cameraGrid}>
+      <div className={styles.cameraFeedBox}>
+        <Text strong>Front Camera</Text>
+        {frontImage ? (
+          <img
+            src={frontImage}
+            alt={`${cart.name} front camera feed`}
+            className={styles.cameraImage}
+          />
+        ) : (
+          <Empty description="Waiting for front camera..." />
+        )}
+      </div>
+
+      <div className={styles.cameraFeedBox}>
+        <Text strong>Rear Camera</Text>
+        {rearImage ? (
+          <img
+            src={rearImage}
+            alt={`${cart.name} rear camera feed`}
+            className={styles.cameraImage}
+          />
+        ) : (
+          <Empty description="Waiting for rear camera..." />
+        )}
+      </div>
     </div>
   );
 }

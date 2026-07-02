@@ -119,6 +119,28 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id, "\n");
   });
+
+  socket.on(
+    "camera-frame",
+    (data: { name: string; camera?: string; data: string }) => {
+      console.log("[Camera] frame received:", {
+        name: data?.name,
+        camera: data?.camera,
+        length: data?.data?.length,
+      });
+
+      if (!data?.name || !data?.data) {
+        console.log("[Camera] invalid camera-frame payload");
+        return;
+      }
+
+      io.emit("camera-update", {
+        name: data.name.trim().toLowerCase(),
+        camera: data.camera ?? "front",
+        data: data.data,
+      });
+    }
+  );
 });
 
 // Define CORS rules for the server

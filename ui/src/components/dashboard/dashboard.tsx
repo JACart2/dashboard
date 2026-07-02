@@ -17,10 +17,14 @@ export default function Dashboard() {
     const map = useRef<maplibregl.Map | null>(null)
     const mapRef = useRef<HTMLDivElement | null>(null)
     const cartMarkers = useRef<{ [key: string]: Marker }>({})
+    const activeCameraCart = useRef<string | null>(null);
     const [carts, setCarts] = useState<VehicleMap>({})
     const [sortedCarts, setSortedCarts] = useState<Vehicle[]>([])
     const [isModalOpen, setIsModalOpen] = useState(false); // State for additional info modal
-    const [cartImage, setCartImage] = useState<string>('')
+    const [cartImages, setCartImages] = useState<{
+        front?: string;
+        rear?: string;
+    }>({});
     const [selectedCart, setSelectedCart] = useState<Vehicle | undefined>(undefined);
 
     const selectedCartData = selectedCart
@@ -30,23 +34,47 @@ export default function Dashboard() {
     const showModal = (cart: Vehicle) => {
         console.log("[Dashboard] opening modal for cart:", cart);
 
+        if (activeCameraCart.current && activeCameraCart.current !== cart.name) {
+            vehicleSocket.unsubscribeCamera(activeCameraCart.current, "front");
+            vehicleSocket.unsubscribeCamera(activeCameraCart.current, "rear");
+        }
+
+        activeCameraCart.current = cart.name;
+
+        setCartImages({});
         setSelectedCart(cart);
         setIsModalOpen(true);
 
-        vehicleSocket.subscribeCamera(cart.name, (data: string) =>
-            setCartImage(data)
-        );
+        console.log("[Camera] subscribing to cart cameras:", cart.name);
+
+        vehicleSocket.subscribeCamera(cart.name, "front", (data: string) => {
+            console.log("[Camera] received front frame:", data.length);
+            setCartImages((prev) => ({
+                ...prev,
+                front: data,
+            }));
+        });
+
+        vehicleSocket.subscribeCamera(cart.name, "rear", (data: string) => {
+            console.log("[Camera] received rear frame:", data.length);
+            setCartImages((prev) => ({
+                ...prev,
+                rear: data,
+            }));
+        });
     };
 
     const handleCancel = () => {
         setIsModalOpen(false);
 
-        if (selectedCart) {
-            vehicleSocket.unsubscribeCamera(selectedCart.name);
+        if (activeCameraCart.current) {
+            vehicleSocket.unsubscribeCamera(activeCameraCart.current, "front");
+            vehicleSocket.unsubscribeCamera(activeCameraCart.current, "rear");
+            activeCameraCart.current = null;
         }
 
         setSelectedCart(undefined);
-        setCartImage("");
+        setCartImages({});
     };
 
     function updateCart(name: string, data: Vehicle) {
@@ -219,8 +247,15 @@ export default function Dashboard() {
         // const locationPins: Marker[] = [];
 
         return () => {
-            vehicleSocket.unsubscribe(vehicleSocketCallback); // Cleanup on unmount
+            vehicleSocket.unsubscribe(vehicleSocketCallback);
+
+            if (activeCameraCart.current) {
+                vehicleSocket.unsubscribeCamera(activeCameraCart.current, "front");
+                vehicleSocket.unsubscribeCamera(activeCameraCart.current, "rear");
+                activeCameraCart.current = null;
+            }
         };
+
     }, [])
 
     // Ensure that carts with help requests are shown first in list
@@ -274,12 +309,12 @@ export default function Dashboard() {
                     <div ref={mapRef} id={styles.map} />
                 </Flex>
 
-                <CartDetailModal
-                    open={isModalOpen}
-                    onClose={handleCancel}
-                    cart={selectedCartData}
-                    cartImage={cartImage}
-                />
+                    <CartDetailModal
+                        open={isModalOpen}
+                        onClose={handleCancel}
+                        cart={selectedCartData}
+                        cartImages={cartImages}
+                    />
             </Content>
         </Layout>
 

@@ -4,6 +4,25 @@
   gap: 16px;
 }
 
+.cameraGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.cameraFeedBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cameraImage {
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
 .cameraPanel {
   display: flex;
   justify-content: center;
