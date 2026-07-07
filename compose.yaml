@@ -1,0 +1,115 @@
+services:
+  dashboard-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: server-dev
+
+    container_name: jacart-dashboard-server
+    restart: unless-stopped
+
+    working_dir: /workspace/dashboard
+    command: npm run dev
+
+    ports:
+      - "${DASHBOARD_PORT:-8000}:8000"
+
+    environment:
+      NODE_ENV: development
+      HOST: 0.0.0.0
+      PORT: "8000"
+
+      STATIC_DIR: /workspace/dashboard/server/static
+
+      SSL_KEY_PATH: /workspace/dashboard/certs/dashboard.key
+      SSL_CERT_PATH: /workspace/dashboard/certs/dashboard.crt
+
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+
+      REDIS_URL: redis://redis:6379
+
+      SOCKET_MAX_BUFFER_BYTES: "5000000"
+
+    volumes:
+      # Bind-mounted source. Host edits are immediately visible.
+      - ./:/workspace/dashboard
+
+      # Preserve container-installed Linux dependencies.
+      - dashboard-server-node-modules:/workspace/dashboard/node_modules
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+    networks:
+      - dashboard-network
+
+  dashboard-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: ui-dev
+
+    container_name: jacart-dashboard-ui
+    restart: unless-stopped
+
+    working_dir: /workspace/dashboard/ui
+
+    command:
+      - npm
+      - run
+      - dev
+      - --
+      - --host
+      - 0.0.0.0
+      - --port
+      - "5174"
+
+    ports:
+      - "5174:5174"
+
+    environment:
+      VITE_API_ROOT: https://10.247.225.41:8000/api/
+      VITE_DASHBOARD_ROOT: https://10.247.225.41:8000
+
+    volumes:
+      - ./:/workspace/dashboard
+      - dashboard-ui-node-modules:/workspace/dashboard/ui/node_modules
+
+    depends_on:
+      - dashboard-server
+
+    networks:
+      - dashboard-network
+
+  redis:
+    image: redis:7-alpine
+
+    container_name: jacart-dashboard-redis
+    restart: unless-stopped
+
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+
+    volumes:
+      - dashboard-redis-data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+    networks:
+      - dashboard-network
+
+volumes:
+  dashboard-server-node-modules:
+  dashboard-ui-node-modules:
+  dashboard-redis-data:
+
+networks:
+  dashboard-network:
+    driver: bridge
