@@ -1,0 +1,3 @@
+SSL_KEY_PATH=/file/path/to/dashboard/certs/.key
+SSL_CERT_PATH=/file/path/to/dashboard/certs/.crt
+CORS_ALLOWED_ORIGINS=https://10.10.10.10:8000,http://10.10.10.10:8000
