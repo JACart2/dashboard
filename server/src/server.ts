@@ -27,20 +27,7 @@ const app = express();
 let server;
 
 // Shared CORS allowlist for Express and Socket.IO
-const allowedOrigins = [
-  // Dashboard production/local HTTPS server
-  "https://10.247.225.41:8000",
-  "http://10.247.225.41:8000",
-
-  // Dashboard Vite dev server
-  "http://10.247.225.41:5174",
-  "https://10.247.225.41:5174",
-
-  // Cart UI Vite dev server when accessed directly on dashboard host
-  "http://10.247.225.41:5173",
-  "https://10.247.225.41:5173",
-
-  // Local browser testing
+const defaultOrigins = [
   "http://localhost:5173",
   "https://localhost:5173",
   "http://localhost:5174",
@@ -49,26 +36,21 @@ const allowedOrigins = [
   "https://localhost:8000",
 ];
 
+const envOrigins = (process.env.CORS_ALLOWED_ORIGINS ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter((origin) => origin.length > 0);
+
+const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
+
+console.log("[CORS] Allowed origins:", allowedOrigins);
+
 function isAllowedOrigin(origin?: string) {
-  if (!origin) return true;
-
-  if (allowedOrigins.includes(origin)) return true;
-
-  // Allow localhost on any port
-  if (
-    origin.startsWith("http://localhost") ||
-    origin.startsWith("https://localhost") ||
-    origin.startsWith("http://127.0.0.1") ||
-    origin.startsWith("https://127.0.0.1")
-  ) {
+  if (!origin) {
     return true;
   }
 
-  // Allow ZeroTier/private dev clients on Vite cart UI/dashboard dev ports
-  if (/^http:\/\/10\.\d+\.\d+\.\d+:5173$/.test(origin)) return true;
-  if (/^http:\/\/10\.\d+\.\d+\.\d+:5174$/.test(origin)) return true;
-
-  return false;
+  return allowedOrigins.includes(origin);
 }
 
 // If SSL key/cert files are provided, we start the server as HTTPS
