@@ -1,0 +1,72 @@
+.overviewGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.cameraGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.cameraFeedBox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cameraPanel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cameraImage {
+  width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.logsPanel {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.logLine {
+  border-bottom: 1px solid #eee;
+  padding: 12px 0;
+}
+
+.logHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logTimestamp {
+  margin-left: auto;
+}
+
+.logMessage {
+  margin-top: 8px;
+}
+
+.aiPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.aiSummaryBox,
+.aiInputsBox {
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.aiSummaryText {
+  margin-top: 8px;
+}

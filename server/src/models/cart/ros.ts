@@ -6,6 +6,10 @@ import { CartUtils, Transform } from "../../config/utils";
 export default class ROSListener {
   static listeners: { [name: string]: ROSListener } = {};
 
+  // This was to prepare for adding a blue line planned route for the cart
+  // private visualPathDebugCount = 0;
+  // private visualPathMarkerCache: Map<number, number[]> = new Map();
+
   url: string;
   name: string;
 

@@ -2,14 +2,14 @@ import { Flex, Layout } from "antd";
 import { Content, Header } from "antd/es/layout/layout";
 import styles from "./dashboard.module.css";
 import "maplibre-gl/dist/maplibre-gl.css";
+import CartDetailModal from "../cart-detail-modal/cart-detail-modal";
 
-import { lazy, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, useEffect, useRef, useState } from "react";
 import { Protocol } from "pmtiles";
 import maplibregl, { Marker } from "maplibre-gl";
 import { vehicleSocket } from "../../services/vehicleSocket";
 import { vehicleService } from "../../services/vehicleService";
 import { Vehicle, VehicleMap } from "../../types";
-import { Modal } from "antd"
 
 const TripInfoCard = lazy(() => import("../trip-info-card/trip-info-card"));
 
@@ -17,24 +17,64 @@ export default function Dashboard() {
     const map = useRef<maplibregl.Map | null>(null)
     const mapRef = useRef<HTMLDivElement | null>(null)
     const cartMarkers = useRef<{ [key: string]: Marker }>({})
+    const activeCameraCart = useRef<string | null>(null);
     const [carts, setCarts] = useState<VehicleMap>({})
     const [sortedCarts, setSortedCarts] = useState<Vehicle[]>([])
     const [isModalOpen, setIsModalOpen] = useState(false); // State for additional info modal
-    const [cartImage, setCartImage] = useState<string>('')
-    const [selectedCart, setSelectedCart] = useState<string>("");
+    const [cartImages, setCartImages] = useState<{
+        front?: string;
+        rear?: string;
+    }>({});
+    const [selectedCart, setSelectedCart] = useState<Vehicle | undefined>(undefined);
 
-    const showModal = (cartName: string) => {
-        setSelectedCart(cartName)
+    const selectedCartData = selectedCart
+        ? carts[selectedCart.name] ?? selectedCart
+        : undefined;
+
+    const showModal = (cart: Vehicle) => {
+        console.log("[Dashboard] opening modal for cart:", cart);
+
+        if (activeCameraCart.current && activeCameraCart.current !== cart.name) {
+            vehicleSocket.unsubscribeCamera(activeCameraCart.current, "front");
+            vehicleSocket.unsubscribeCamera(activeCameraCart.current, "rear");
+        }
+
+        activeCameraCart.current = cart.name;
+
+        setCartImages({});
+        setSelectedCart(cart);
         setIsModalOpen(true);
 
-        //FIXME maybe do a ref here or make it prettier
-        vehicleSocket.subscribeCamera(cartName, (data: string) => setCartImage(data));
+        // console.log("[Camera] subscribing to cart cameras:", cart.name);
+
+        vehicleSocket.subscribeCamera(cart.name, "front", (data: string) => {
+            // console.log("[Camera] received front frame:", data.length);
+            setCartImages((prev) => ({
+                ...prev,
+                front: data,
+            }));
+        });
+
+        vehicleSocket.subscribeCamera(cart.name, "rear", (data: string) => {
+            console.log("[Camera] received rear frame:", data.length);
+            setCartImages((prev) => ({
+                ...prev,
+                rear: data,
+            }));
+        });
     };
 
     const handleCancel = () => {
         setIsModalOpen(false);
-        vehicleSocket.unsubscribeCamera(selectedCart);
-        setSelectedCart("");
+
+        if (activeCameraCart.current) {
+            vehicleSocket.unsubscribeCamera(activeCameraCart.current, "front");
+            vehicleSocket.unsubscribeCamera(activeCameraCart.current, "rear");
+            activeCameraCart.current = null;
+        }
+
+        setSelectedCart(undefined);
+        setCartImages({});
     };
 
     function updateCart(name: string, data: Vehicle) {
@@ -58,13 +98,29 @@ export default function Dashboard() {
     }
 
     const vehicleSocketCallback = (res: any) => {
-        console.log("Update: ", res)
+        console.log("[Vehicle Socket Update]:", res);
+
+        if (res?.data?.logs) {
+            console.log("[Dashboard Logs Update]:", {
+                name: res.name,
+                logCount: res.data.logs.length,
+                latestLog: res.data.logs[0],
+            });
+        }
+
+        if (res?.data?.aiLogSummary) {
+            console.log("[Dashboard AI Summary Update]:", {
+                name: res.name,
+                aiLogSummary: res.data.aiLogSummary,
+            });
+        }
+
         if (res.deleted) {
             deleteCart(res.name);
         } else {
-            updateCart(res.name, res.data)
+            updateCart(res.name, res.data);
         }
-    }
+    };
 
     function focusCart(longLat: number[]) {
         if (map.current == undefined) return
@@ -115,9 +171,8 @@ export default function Dashboard() {
     }
 
     function handleModal(cart: Vehicle) {
-        // setSelectedCart(cart.name);
-
-        showModal(cart.name);
+        console.log("[Dashboard] card clicked:", cart);
+        showModal(cart);
     }
 
     // Add or delete markers when carts list changes
@@ -163,9 +218,19 @@ export default function Dashboard() {
 
         vehicleService.getVehicles().then((vehicles) => {
             console.log("Vehicles: ", vehicles);
-            setCarts(vehicles as VehicleMap)
-        })
-        vehicleSocket.subscribe(vehicleSocketCallback);
+
+            if (Array.isArray(vehicles)) {
+                const vehicleMap = vehicles.reduce((acc, vehicle) => {
+                    acc[vehicle.name] = vehicle;
+                    return acc;
+                }, {} as VehicleMap);
+
+                setCarts(vehicleMap);
+            } else {
+                setCarts(vehicles as VehicleMap);
+            }
+        });
+            vehicleSocket.subscribe(vehicleSocketCallback);
 
         const protocol = new Protocol();
         maplibregl.addProtocol("pmtiles", protocol.tile);
@@ -182,23 +247,36 @@ export default function Dashboard() {
         // const locationPins: Marker[] = [];
 
         return () => {
-            vehicleSocket.unsubscribe(vehicleSocketCallback); // Cleanup on unmount
+            vehicleSocket.unsubscribe(vehicleSocketCallback);
+
+            if (activeCameraCart.current) {
+                vehicleSocket.unsubscribeCamera(activeCameraCart.current, "front");
+                vehicleSocket.unsubscribeCamera(activeCameraCart.current, "rear");
+                activeCameraCart.current = null;
+            }
         };
+
     }, [])
 
     // Ensure that carts with help requests are shown first in list
-    useMemo(() => {
+    useEffect(() => {
         const helpRequested: Vehicle[] = [];
         const noAlerts: Vehicle[] = [];
 
         Object.values(carts).forEach(cart => {
             if (!!cart.helpRequested) helpRequested.push(cart);
             else noAlerts.push(cart);
-        })
+        });
 
         setSortedCarts([...helpRequested, ...noAlerts]);
-    }, [carts])
+    }, [carts]);
 
+    console.log("[Dashboard render]", {
+        isModalOpen,
+        selectedCart,
+        selectedCartData,
+    });
+    
     return (
         <Layout className={styles.dashboardContainer}>
             <Header>
@@ -211,28 +289,32 @@ export default function Dashboard() {
             </Header>
             <Content>
                 <Flex className={`${styles.fillHeight} ${styles.dashboardContent}`}>
-                    <Flex className={styles.dashboardCards} vertical gap="middle" justify="flex-start">
-                        {/* {Object.values(carts).map((cart: Vehicle) => ( */}
-                        {sortedCarts.map((cart: Vehicle) => (
-                            <TripInfoCard cart={cart} doesNavToRoot={true} focusCartCallback={(longLat: number[]) => focusCart(longLat)} key={cart.name} onClick={(cart: Vehicle) => handleModal(cart)}></TripInfoCard>
-                        ))}
+                    <Flex
+                    className={styles.dashboardCards}
+                    vertical
+                    gap="middle"
+                    justify="flex-start"
+                    >
+                    {sortedCarts.map((cart: Vehicle) => (
+                        <TripInfoCard
+                        cart={cart}
+                        doesNavToRoot={true}
+                        focusCartCallback={(longLat: number[]) => focusCart(longLat)}
+                        key={cart.name}
+                        onClick={() => handleModal(cart)}
+                        />
+                    ))}
                     </Flex>
-                    <div ref={mapRef} id={styles.map} >
-                        <Modal
-                            title="Cart Details"
-                            open={isModalOpen}
-                            onCancel={handleCancel}
-                            closable={false}
-                            centered
-                        >
-                            <Flex vertical align="center">
-                                <img style={{ width: '256px', aspectRatio: 1 }} src={cartImage}></img>
-                            </Flex>
-                        </Modal>
-                    </div>
 
+                    <div ref={mapRef} id={styles.map} />
                 </Flex>
 
+                    <CartDetailModal
+                        open={isModalOpen}
+                        onClose={handleCancel}
+                        cart={selectedCartData}
+                        cartImages={cartImages}
+                    />
             </Content>
         </Layout>
 

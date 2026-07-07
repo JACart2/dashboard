@@ -50,10 +50,16 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
     function toggleHelpRequested(e: React.MouseEvent) {
         e.preventDefault();
         e.stopPropagation();
+        
+        console.log("[Help Requested] clicked cart:", cart.name);
 
-        return vehicleService.editVehicle(cart.name, {
-            helpRequested: !cart.helpRequested
-        });
+        return vehicleService.requestHelp(cart.name, !cart.helpRequested)
+            .then((res) => {
+                console.log("[Help Requested] backend response:", res);
+            })
+            .catch((err) => {
+                console.error("[Help Requested] failed:", err);
+            });
     }
 
     return (
@@ -65,13 +71,33 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
                     <span className={styles.cartName}>{cart.name}</span>
                 </Flex>
 
+
                 <Flex gap="8px">
                     {!!cart.longLat &&
-                        <Button className={styles.cardTitleButton} onClick={($event) => emitFocusCart($event)} icon={<FaLocationCrosshairs />} shape="circle"></Button>
+                        <Button
+                            className={styles.cardTitleButton}
+                            onClick={emitFocusCart}
+                            icon={<FaLocationCrosshairs />}
+                            shape="circle"
+                        />
                     }
-
+                    {/* TODO: Remove when cart can request help from its UI */}
+                    <Button
+                        className={styles.cardTitleButton}
+                        onClick={toggleHelpRequested}
+                        icon={<FaTriangleExclamation />}
+                        shape="circle"
+                        danger={!!cart.helpRequested}
+                    />
                     { /* Delete button may not be needed once carts are auto removed after inactivity, but still useful for now while under development */}
-                    <Button className={styles.cardTitleButton} onClick={($event) => deleteCart($event)} icon={<FaTrash />} variant="filled" danger shape="circle"></Button>
+                    <Button
+                        className={styles.cardTitleButton}
+                        onClick={deleteCart}
+                        icon={<FaTrash />}
+                        variant="filled"
+                        danger
+                        shape="circle"
+                    />
                 </Flex>
             </Flex>
         }>
@@ -103,9 +129,7 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
                     format={() => getSpeedLabel()} />
             </Flex>
 
-            {/* TODO: Remove when cart can request help from its UI */}
-            <Button className={styles.toggleHelpRequested} onClick={($event) => toggleHelpRequested($event)} icon={<FaTriangleExclamation />} shape="circle"></Button>
-        </Card>
+         </Card>
     );
 
 }
