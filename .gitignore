@@ -7,6 +7,9 @@ server/.env
 
 ui/dist
 ui/.env
+ui/tsconfig.tsbuildinfo
+ui/tsconfig.node.json
+ui/tsconfig.node.tsbuildinfo
 
 certs/*.key
 certs/dashboard.key

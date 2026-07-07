@@ -16,13 +16,6 @@
   gap: 8px;
 }
 
-.cameraImage {
-  width: 100%;
-  max-height: 360px;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
 .cameraPanel {
   display: flex;
   justify-content: center;

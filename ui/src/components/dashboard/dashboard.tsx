@@ -45,10 +45,10 @@ export default function Dashboard() {
         setSelectedCart(cart);
         setIsModalOpen(true);
 
-        console.log("[Camera] subscribing to cart cameras:", cart.name);
+        // console.log("[Camera] subscribing to cart cameras:", cart.name);
 
         vehicleSocket.subscribeCamera(cart.name, "front", (data: string) => {
-            console.log("[Camera] received front frame:", data.length);
+            // console.log("[Camera] received front frame:", data.length);
             setCartImages((prev) => ({
                 ...prev,
                 front: data,

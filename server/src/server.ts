@@ -16,10 +16,10 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const envPath = path.resolve(__dirname, "../.env");
 const dotenvResult = dotenv.config({ path: envPath });
 
-console.log("[ENV] Loading env from:", envPath);
-console.log("[ENV] dotenv error:", dotenvResult.error);
-console.log("[ENV] SSL_KEY_PATH:", process.env.SSL_KEY_PATH);
-console.log("[ENV] SSL_CERT_PATH:", process.env.SSL_CERT_PATH);
+// console.log("[ENV] Loading env from:", envPath);
+// console.log("[ENV] dotenv error:", dotenvResult.error);
+// console.log("[ENV] SSL_KEY_PATH:", process.env.SSL_KEY_PATH);
+// console.log("[ENV] SSL_CERT_PATH:", process.env.SSL_CERT_PATH);
 
 
 const useHTTPS = !!process.env.SSL_KEY_PATH && !!process.env.SSL_CERT_PATH;
@@ -123,14 +123,14 @@ io.on("connection", (socket) => {
   socket.on(
     "camera-frame",
     (data: { name: string; camera?: string; data: string }) => {
-      console.log("[Camera] frame received:", {
-        name: data?.name,
-        camera: data?.camera,
-        length: data?.data?.length,
-      });
+      // console.log("[Camera] frame received:", {
+      //   name: data?.name,
+      //   camera: data?.camera,
+      //   length: data?.data?.length,
+      // });
 
       if (!data?.name || !data?.data) {
-        console.log("[Camera] invalid camera-frame payload");
+        // console.log("[Camera] invalid camera-frame payload");
         return;
       }
 

@@ -44,12 +44,12 @@ socket.on("camera-update", (data: CameraUpdate) => {
   const camera = data.camera ?? "front";
   const key = cameraKey(data.name, camera);
 
-  console.log("[Socket.IO] camera-update received:", {
-    name: data.name,
-    camera,
-    key,
-    length: data.data?.length,
-  });
+  // console.log("[Socket.IO] camera-update received:", {
+  //   name: data.name,
+  //   camera,
+  //   key,
+  //   length: data.data?.length,
+  // });
 
   const callback = cameraCallbacks.get(key);
 
