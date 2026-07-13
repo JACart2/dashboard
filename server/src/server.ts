@@ -218,6 +218,15 @@ type CameraFramePayload = {
   data: string;
 };
 
+type DecisionLogPayload = {
+  cartName?: string;
+  timestamp?: string;
+  severity?: string;
+  source?: string;
+  message?: string;
+};
+
+
 function parseCameraSubscription(
   payload: CameraSubscriptionPayload
 ): {
@@ -337,6 +346,47 @@ io.on("connection", (socket) => {
       reason,
     });
   });
+
+  socket.on(
+    "decision-log",
+    (payload: DecisionLogPayload) => {
+      const cartName = payload.cartName
+        ?.trim()
+        .toLowerCase();
+
+      const message = payload.message?.trim();
+
+      if (!cartName || !message) {
+        console.warn(
+          "[Decision Log] Invalid payload:",
+          payload,
+        );
+        return;
+      }
+
+      const level: "info" | "warn" | "error" | "debug" =
+        payload.severity?.toLowerCase() === "error"
+          ? "error"
+          : payload.severity?.toLowerCase() === "warning" ||
+              payload.severity?.toLowerCase() === "warn"
+            ? "warn"
+            : payload.severity?.toLowerCase() === "debug"
+              ? "debug"
+              : "info";
+
+      io.emit("decision-log-update", {
+        cartName,
+        log: {
+          timestamp:
+            payload.timestamp ?? new Date().toISOString(),
+          level,
+          source:
+            payload.source ?? "ai_anomaly_logging",
+          message,
+        },
+      });
+    },
+  );
 });
 
 /*

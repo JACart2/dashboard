@@ -1,4 +1,5 @@
 import io from "socket.io-client";
+import type { CartLogUpdate } from "../types";
 
 const socket = io(window.location.origin, {
   transports: ["websocket", "polling"],
@@ -94,6 +95,18 @@ export const vehicleSocket = {
     });
   },
 
+  subscribeDecisionLogs(
+    callback: (update: CartLogUpdate) => void,
+  ): void {
+    socket.on("decision-log-update", callback);
+  },
+
+  unsubscribeDecisionLogs(
+    callback: (update: CartLogUpdate) => void,
+  ): void {
+    socket.off("decision-log-update", callback);
+  },
+  
   unsubscribeCamera(cartName: string, camera: CameraName) {
     const key = cameraKey(cartName, camera);
 

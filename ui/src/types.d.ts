@@ -23,3 +23,8 @@ export interface Vehicle {
 export interface VehicleMap {
   [key: string]: Vehicle;
 }
+
+export interface CartLogUpdate {
+  cartName: string;
+  log: CartLogEntry;
+}
