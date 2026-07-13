@@ -95,16 +95,19 @@ function CartOverview({ cart }: { cart: Vehicle }) {
         </div>
       </div>
 
-      <div>
-        <Text strong>Anomaly:</Text>
-        <div>
-          {cart.anomalyResult ? (
-            <Tag color="red">{cart.anomalyResult}</Tag>
-          ) : (
-            <Tag color="green">None</Tag>
-          )}
+        <div className={styles.anomalyBlock}>
+          <Text strong>Anomaly:</Text>
+
+          <div className={styles.anomalyContainer}>
+            {cart.anomalyResult ? (
+              <Tag color="red" className={styles.anomalyTag}>
+                {cart.anomalyResult}
+              </Tag>
+            ) : (
+              <Tag color="green">None</Tag>
+            )}
+          </div>
         </div>
-      </div>
 
       <InfoBlock
         label="Location"

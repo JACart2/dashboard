@@ -1,9 +1,36 @@
 .overviewGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
 }
 
+.anomalyBlock {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.anomalyContainer {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.anomalyTag {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  height: auto;
+  margin: 0;
+  box-sizing: border-box;
+
+  white-space: normal !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
+  line-height: 1.5;
+}
 .cameraGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
