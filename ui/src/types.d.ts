@@ -1,7 +1,14 @@
+
+
 export interface CartLogEntry {
   timestamp: string;
   level: "info" | "warn" | "error" | "debug";
   source?: string;
+  message: string;
+}
+
+export interface AADAlert {
+  timestamp: string;
   message: string;
 }
 
@@ -14,7 +21,7 @@ export interface Vehicle {
   endLocation?: string;
   imgData?: string;
   helpRequested?: boolean;
-  anomalyResult?: string;
+  anomalyResult?: AADAlert[];
   visualPath?: number[][];
   logs?: CartLogEntry[];
   aiLogSummary?: string;

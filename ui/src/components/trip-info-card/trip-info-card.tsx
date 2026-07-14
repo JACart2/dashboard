@@ -121,7 +121,7 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
                 {!!cart.anomalyResult &&
                     <div className={styles.anomalyAlert}>
                         <span>Anomaly:</span>{" "}
-                        <span>{cart.anomalyResult}</span>
+                        <span>{cart.anomalyResult?.[0]?.message ?? "None"}</span>
                     </div>
                 }
 

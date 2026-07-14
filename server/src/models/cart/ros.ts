@@ -5,6 +5,7 @@ import { CartUtils, Transform } from "../../config/utils";
 // A utility class that handles a cart's ROS connection
 export default class ROSListener {
   static listeners: { [name: string]: ROSListener } = {};
+  private anomalyMessages: AADAlert[] = [];
 
   // This was to prepare for adding a blue line planned route for the cart
   // private visualPathDebugCount = 0;
@@ -64,14 +65,6 @@ export default class ROSListener {
       CartUtils.editCart(this.name, { longLat });
     });
 
-    this.topics["visual_path"].subscribe((message: any) => {
-      // console.log(`[ROS] Received 'visual_path':`, message);
-    });
-
-    this.topics["vehicle_state"].subscribe((message: any) => {
-      // console.log(`[ROS] Received 'vehicle_state':`, message);
-    });
-
     this.topics["clicked_point"].subscribe((message: any) => {
       console.log(`[ROS] Received 'clicked_point':`, message);
 
@@ -92,19 +85,31 @@ export default class ROSListener {
       const speed = message?.["vel"];
       CartUtils.editCart(this.name, { speed });
     });
+    
     try {
       this.topics["anomaly_result"].subscribe((message: any) => {
-        console.log("                      INCOMING ANOMALY MESSAGE")
-        console.log("______________________________________________________________________")
+        console.log("INCOMING ANOMALY MESSAGE");
         console.log(message.data);
-        console.log("______________________________________________________________________")
-        console.log("")
 
-        const anomalyResult = message.data;
-        CartUtils.editCart(this.name, { anomalyResult });
+        const incomingAlert: AADAlert = {
+          timestamp: new Date().toISOString(),
+          message: String(message.data),
+        };
+
+        this.anomalyMessages = [
+          incomingAlert,
+          ...this.anomalyMessages,
+        ].slice(0, 100);
+
+        CartUtils.editCart(this.name, {
+          anomalyResult: this.anomalyMessages,
+        });
       });
     } catch (e) {
-      console.error(`[ROS] Failed to subscribe to 'anomaly_result':`, e);
+      console.error(
+        `[ROS] Failed to subscribe to 'anomaly_result':`,
+        e
+      );
     }
   }
 }

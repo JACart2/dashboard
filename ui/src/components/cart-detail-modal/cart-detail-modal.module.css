@@ -31,6 +31,71 @@
   word-break: break-word !important;
   line-height: 1.5;
 }
+
+.logsColumns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  min-height: 460px;
+}
+
+.logsColumn,
+.anomalyColumn {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.columnHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid #d9d9d9;
+  background: #fafafa;
+}
+
+.scrollableLogList,
+.scrollableAnomalyList {
+  flex: 1;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.logLine,
+.anomalyLine {
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+.anomalyLine {
+  border-left: 4px solid #ff4d4f;
+}
+
+.anomalyHeader {
+  margin-bottom: 6px;
+}
+
+.anomalyMessage {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+
+@media (max-width: 800px) {
+  .logsColumns {
+    grid-template-columns: 1fr;
+  }
+}
+
 .cameraGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;

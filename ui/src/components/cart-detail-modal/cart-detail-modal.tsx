@@ -1,6 +1,7 @@
 import { Empty, Modal, Tabs, Typography, Tag } from "antd";
-import type { CartLogEntry, Vehicle } from "../../types";
+import type { CartLogEntry, Vehicle, AADAlert } from "../../types";
 import styles from "./cart-detail-modal.module.css";
+
 
 const { Text, Paragraph } = Typography;
 
@@ -99,9 +100,9 @@ function CartOverview({ cart }: { cart: Vehicle }) {
           <Text strong>Anomaly:</Text>
 
           <div className={styles.anomalyContainer}>
-            {cart.anomalyResult ? (
+            {cart.anomalyResult?.length ? (
               <Tag color="red" className={styles.anomalyTag}>
-                {cart.anomalyResult}
+                {cart.anomalyResult?.[0]?.message ?? "None"}
               </Tag>
             ) : (
               <Tag color="green">None</Tag>
@@ -185,33 +186,87 @@ function CartCamera({
 
 function CartLogs({ cart }: { cart: Vehicle }) {
   const logs = cart.logs ?? [];
-
-  if (logs.length === 0) {
-    return <Empty description="No cart logs or events received yet" />;
-  }
+  const anomalyMessages = cart.anomalyResult ?? [];
 
   return (
-    <div className={styles.logsPanel}>
-      {logs.map((log, index) => (
-        <div key={`${log.timestamp}-${index}`} className={styles.logLine}>
-          <div className={styles.logHeader}>
-            <Tag color={getLogLevelColor(log.level)}>
-              {log.level.toUpperCase()}
-            </Tag>
-
-            {log.source && <Text strong>{log.source}</Text>}
-
-            <Text type="secondary" className={styles.logTimestamp}>
-              {formatTimestamp(log.timestamp)}
-            </Text>
-          </div>
-
-          <div className={styles.logMessage}>{log.message}</div>
+    <div className={styles.logsColumns}>
+      <section className={styles.logsColumn}>
+        <div className={styles.columnHeader}>
+          <Text strong>Cart Logs</Text>
+          <Tag>{logs.length}</Tag>
         </div>
-      ))}
+
+        <div className={styles.scrollableLogList}>
+          {logs.length === 0 ? (
+            <Empty description="No cart logs or events received yet" />
+          ) : (
+            logs.map((log, index) => (
+              <div
+                key={`${log.timestamp}-${index}`}
+                className={styles.logLine}
+              >
+                <div className={styles.logHeader}>
+                  <Tag color={getLogLevelColor(log.level)}>
+                    {log.level.toUpperCase()}
+                  </Tag>
+
+                  {log.source && <Text strong>{log.source}</Text>}
+
+                  <Text
+                    type="secondary"
+                    className={styles.logTimestamp}
+                  >
+                    {formatTimestamp(log.timestamp)}
+                  </Text>
+                </div>
+
+                <div className={styles.logMessage}>
+                  {log.message}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className={styles.anomalyColumn}>
+        <div className={styles.columnHeader}>
+          <Text strong>AAD Alerts</Text>
+          <Tag color="red">{anomalyMessages.length}</Tag>
+        </div>
+
+        <div className={styles.scrollableAnomalyList}>
+          {anomalyMessages.length === 0 ? (
+            <Empty description="No /aad/alerts messages received yet" />
+          ) : (
+            anomalyMessages.map((alert: AADAlert, index) => (
+              <div
+                key={`${alert.timestamp}-${index}`}
+                className={styles.anomalyLine}
+              >
+                <div className={styles.anomalyHeader}>
+                  <Tag color="red">AAD ALERT</Tag>
+
+                  <Text
+                    type="secondary"
+                    className={styles.logTimestamp}
+                  >
+                    {formatTimestamp(alert.timestamp)}
+                  </Text>
+                </div>
+
+                <div className={styles.anomalyMessage}>
+                  {alert.message}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
     </div>
   );
 }
+
 
 function CartAI({ cart }: { cart: Vehicle }) {
   const logs = cart.logs ?? [];
@@ -237,7 +292,7 @@ function CartAI({ cart }: { cart: Vehicle }) {
           <li>Recent cart logs: {logs.length}</li>
           <li>Current destination: {cart.endLocation ?? "Unknown"}</li>
           <li>Help requested: {cart.helpRequested ? "Yes" : "No"}</li>
-          <li>Anomaly result: {cart.anomalyResult ?? "None"}</li>
+          <li>Latest anomaly result:{" "} {cart.anomalyResult?.[0]?.message ?? "None"}</li>
           <li>Current speed: {cart.speed == null ? "N/A" : cart.speed}</li>
         </ul>
       </div>
