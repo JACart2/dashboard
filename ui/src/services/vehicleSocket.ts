@@ -1,5 +1,5 @@
 import io from "socket.io-client";
-import type { CartLogUpdate } from "../types";
+import type { CartLogUpdate, DashboardAIDecision } from "../types";
 
 const socket = io(window.location.origin, {
   transports: ["websocket", "polling"],
@@ -18,6 +18,8 @@ type CameraFrame = {
   camera: CameraName;
   data: string;
 };
+
+type DashboardAIDecisionUpdate = DashboardAIDecision;
 
 function normalizeCartName(name: string) {
   return name.trim().toLowerCase();
@@ -93,6 +95,18 @@ export const vehicleSocket = {
       name: normalizeCartName(cartName),
       camera,
     });
+  },
+
+  subscribeDashboardAIDecisions(
+    callback: (decision: DashboardAIDecisionUpdate) => void,
+  ): void {
+    socket.on("dashboard-ai-decision", callback);
+  },
+
+  unsubscribeDashboardAIDecisions(
+    callback: (decision: DashboardAIDecisionUpdate) => void,
+  ): void {
+    socket.off("dashboard-ai-decision", callback);
   },
 
   subscribeDecisionLogs(

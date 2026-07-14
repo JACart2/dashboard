@@ -11,7 +11,7 @@ import fs = require("fs");
 import dotenv from "dotenv";
 
 import routes from "./routes";
-import { redisSub } from "./config/db";
+import { redis, redisSub } from "./config/db";
 import CameraSubManager from "./config/camera-subs";
 
 /*
@@ -349,7 +349,7 @@ io.on("connection", (socket) => {
 
   socket.on(
     "decision-log",
-    (payload: DecisionLogPayload) => {
+    async (payload: DecisionLogPayload) => {
       const cartName = payload.cartName
         ?.trim()
         .toLowerCase();
@@ -364,6 +364,9 @@ io.on("connection", (socket) => {
         return;
       }
 
+      const timestamp =
+        payload.timestamp ?? new Date().toISOString();
+
       const level: "info" | "warn" | "error" | "debug" =
         payload.severity?.toLowerCase() === "error"
           ? "error"
@@ -374,20 +377,82 @@ io.on("connection", (socket) => {
               ? "debug"
               : "info";
 
+      const source =
+        payload.source ?? "ai_anomaly_logging";
+
+      const log = {
+        timestamp,
+        level,
+        source,
+        message,
+      };
+
       io.emit("decision-log-update", {
         cartName,
-        log: {
-          timestamp:
-            payload.timestamp ?? new Date().toISOString(),
-          level,
-          source:
-            payload.source ?? "ai_anomaly_logging",
-          message,
-        },
+        log,
       });
+
+      try {
+        const streamKey =
+          `cart:${cartName}:dashboard-ai:input`;
+
+        const aiPayload = {
+          timestamp,
+          cartName,
+          nodeName: source,
+          importance: severityToImportance(level),
+          type: 0,
+          text: message,
+        };
+
+        const entryId = await redis.xAdd(
+          streamKey,
+          "*",
+          {
+            payload: JSON.stringify(aiPayload),
+          },
+        );
+
+        await redis.xTrim(
+          streamKey,
+          "MAXLEN",
+          1000,
+        );
+
+        console.log(
+          "[Dashboard AI] Stored decision log input:",
+          {
+            cartName,
+            streamKey,
+            entryId,
+          },
+        );
+      } catch (error) {
+        console.error(
+          "[Dashboard AI] Failed to store input:",
+          error,
+        );
+      }
     },
   );
 });
+
+  function severityToImportance(
+  level: "info" | "warn" | "error" | "debug",
+): number {
+  switch (level) {
+    case "error":
+      return 2;
+
+    case "warn":
+      return 1;
+
+    case "debug":
+    case "info":
+    default:
+      return 0;
+  }
+}
 
 /*
  * API routes should be registered before the SPA fallback.
@@ -447,6 +512,26 @@ redisSub.subscribe("ai:log-results", (message) => {
   } catch (error) {
     console.error(
       "[Redis] Failed to parse AI analysis message:",
+      error
+    );
+  }
+});
+
+redisSub.subscribe("dashboard-ai:decision", (message) => {
+  try {
+    const decision = JSON.parse(message);
+
+    console.log("[Dashboard AI] Decision received:", {
+      cartName: decision.cartName,
+      model: decision.model,
+      anomaly: decision.anomaly,
+      severity: decision.severity,
+    });
+
+    io.emit("dashboard-ai-decision", decision);
+  } catch (error) {
+    console.error(
+      "[Dashboard AI] Failed to parse decision:",
       error
     );
   }

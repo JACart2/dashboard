@@ -1,0 +1,4 @@
+# services/dashboard-ai-worker/requirements.txt
+
+redis==5.2.1
+requests==2.32.3

@@ -2,6 +2,12 @@ import * as ROSLIB from "roslib";
 import CameraSubManager from "../../config/camera-subs";
 import { CartUtils, Transform } from "../../config/utils";
 
+type AADAlert = {
+  timestamp: string;
+  message: string;
+  source: "local-aad";
+};
+
 // A utility class that handles a cart's ROS connection
 export default class ROSListener {
   static listeners: { [name: string]: ROSListener } = {};
@@ -153,6 +159,6 @@ const CART_TOPICS = {
   anomaly_result: {
     name: "/aad/alerts",
     messageType: "std_msgs/msg/String",
-    throttle_rate: 500,
+    throttle_rate: 0,
   },
 };

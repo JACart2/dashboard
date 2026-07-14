@@ -9,7 +9,7 @@ import { Protocol } from "pmtiles";
 import maplibregl, { Marker } from "maplibre-gl";
 import { vehicleSocket } from "../../services/vehicleSocket";
 import { vehicleService } from "../../services/vehicleService";
-import { CartLogUpdate, Vehicle, VehicleMap } from "../../types";
+import { CartLogUpdate, Vehicle, VehicleMap, DashboardAIDecision } from "../../types";
 
 const TripInfoCard = lazy(() => import("../trip-info-card/trip-info-card"));
 
@@ -62,11 +62,6 @@ export default function Dashboard() {
                 rear: data,
             }));
         });
-
-        vehicleSocket.subscribe(vehicleSocketCallback);
-        vehicleSocket.subscribeDecisionLogs(
-        decisionLogCallback,
-        );
     };
 
     const handleCancel = () => {
@@ -122,15 +117,93 @@ export default function Dashboard() {
             };
         });
         };
+    
+    const dashboardAIDecisionCallback = (
+        decision: DashboardAIDecision,
+        ) => {
+        console.log(
+            "[Dashboard] dashboard AI decision received:",
+            decision,
+        );
+
+        setCarts((previousCarts) => {
+            const matchingCartName = Object.keys(
+            previousCarts,
+            ).find(
+            (name) =>
+                name.trim().toLowerCase() ===
+                decision.cartName.trim().toLowerCase(),
+            );
+
+            if (!matchingCartName) {
+            console.warn(
+                "[Dashboard] No matching cart for dashboard AI decision:",
+                decision.cartName,
+            );
+
+            return previousCarts;
+            }
+
+            const cart = previousCarts[matchingCartName];
+
+            return {
+            ...previousCarts,
+            [matchingCartName]: {
+                ...cart,
+                dashboardAIDecisions: [
+                decision,
+                ...(cart.dashboardAIDecisions ?? []),
+                ].slice(0, 100),
+            },
+            };
+        });
+        };
 
     function updateCart(name: string, data: Vehicle) {
-        setCarts(prevCarts => ({
-            ...prevCarts,
-            [name]: {
-                ...prevCarts[name], // Merge existing cart data
-                ...data
-            }
-        }));
+    setCarts((previousCarts) => {
+        const existingCart = previousCarts[name];
+
+        const existingAAD = existingCart?.anomalyResult ?? [];
+        const incomingAAD = data.anomalyResult ?? [];
+
+        const mergedAAD = [
+        ...incomingAAD,
+        ...existingAAD,
+        ]
+        .filter(
+            (alert, index, alerts) =>
+            alerts.findIndex(
+                (candidate) =>
+                candidate.timestamp === alert.timestamp &&
+                candidate.message === alert.message,
+            ) === index,
+        )
+        .sort(
+            (a, b) =>
+            new Date(b.timestamp).getTime() -
+            new Date(a.timestamp).getTime(),
+        )
+        .slice(0, 100);
+
+        return {
+        ...previousCarts,
+        [name]: {
+            ...existingCart,
+            ...data,
+
+            anomalyResult: mergedAAD,
+
+            // These histories are managed separately.
+            dashboardAIDecisions:
+            existingCart?.dashboardAIDecisions ?? [],
+
+            logs:
+            data.logs ??
+            existingCart?.logs ??
+            [],
+        },
+        };
+    });
     }
 
     function deleteCart(name: string) {
@@ -277,6 +350,8 @@ export default function Dashboard() {
             }
         });
             vehicleSocket.subscribe(vehicleSocketCallback);
+            vehicleSocket.subscribeDecisionLogs(decisionLogCallback);
+            vehicleSocket.subscribeDashboardAIDecisions(dashboardAIDecisionCallback);
 
         const protocol = new Protocol();
         maplibregl.addProtocol("pmtiles", protocol.tile);
@@ -300,7 +375,8 @@ export default function Dashboard() {
                 vehicleSocket.unsubscribeCamera(activeCameraCart.current, "rear");
                 
                 vehicleSocket.unsubscribe(vehicleSocketCallback,);
-                vehicleSocket.unsubscribeDecisionLogs(decisionLogCallback,);
+                vehicleSocket.unsubscribeDecisionLogs(decisionLogCallback);
+                vehicleSocket.unsubscribeDashboardAIDecisions(dashboardAIDecisionCallback);
                 activeCameraCart.current = null;
             }
         };
