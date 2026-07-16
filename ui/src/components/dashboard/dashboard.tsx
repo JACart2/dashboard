@@ -9,7 +9,7 @@ import { Protocol } from "pmtiles";
 import maplibregl, { Marker } from "maplibre-gl";
 import { vehicleSocket } from "../../services/vehicleSocket";
 import { vehicleService } from "../../services/vehicleService";
-import { CartLogUpdate, Vehicle, VehicleMap, DashboardAIDecision } from "../../types";
+import { Vehicle, VehicleMap, DashboardAIDecision } from "../../types";
 
 const TripInfoCard = lazy(() => import("../trip-info-card/trip-info-card"));
 
@@ -77,133 +77,127 @@ export default function Dashboard() {
         setCartImages({});
     };
 
-    const decisionLogCallback = (
-        update: CartLogUpdate,
-        ) => {
-        console.log(
-            "[Dashboard] decision log received:",
-            update,
-        );
-
-        setCarts((previousCarts) => {
-            const matchingCartName = Object.keys(
-            previousCarts,
-            ).find(
-            (name) =>
-                name.toLowerCase() ===
-                update.cartName.toLowerCase(),
-            );
-
-            if (!matchingCartName) {
-            console.warn(
-                "[Dashboard] No matching cart for log:",
-                update.cartName,
-            );
-
-            return previousCarts;
-            }
-
-            const cart = previousCarts[matchingCartName];
-
-            return {
-            ...previousCarts,
-            [matchingCartName]: {
-                ...cart,
-                logs: [
-                update.log,
-                ...(cart.logs ?? []),
-                ].slice(0, 500),
-            },
-            };
-        });
-        };
-    
     const dashboardAIDecisionCallback = (
-        decision: DashboardAIDecision,
-        ) => {
-        console.log(
-            "[Dashboard] dashboard AI decision received:",
-            decision,
+    incomingDecision: DashboardAIDecision,
+) => {
+    console.log(
+        "[Dashboard] dashboard AI decision received:",
+        incomingDecision,
+    );
+
+    const decisionCartName =
+        typeof incomingDecision.cartName === "string"
+            ? incomingDecision.cartName
+            : "";
+
+    if (!decisionCartName.trim()) {
+        console.warn(
+            "[Dashboard] Ignoring dashboard AI decision without cartName:",
+            incomingDecision,
         );
 
-        setCarts((previousCarts) => {
-            const matchingCartName = Object.keys(
-            previousCarts,
-            ).find(
+        return;
+    }
+
+    setCarts((previousCarts) => {
+        const matchingCartName = Object.keys(previousCarts).find(
             (name) =>
                 name.trim().toLowerCase() ===
-                decision.cartName.trim().toLowerCase(),
-            );
+                decisionCartName.trim().toLowerCase(),
+        );
 
-            if (!matchingCartName) {
+        if (!matchingCartName) {
             console.warn(
                 "[Dashboard] No matching cart for dashboard AI decision:",
-                decision.cartName,
+                decisionCartName,
             );
 
             return previousCarts;
-            }
+        }
 
-            const cart = previousCarts[matchingCartName];
+        const cart = previousCarts[matchingCartName];
 
-            return {
+        return {
             ...previousCarts,
             [matchingCartName]: {
                 ...cart,
                 dashboardAIDecisions: [
-                decision,
-                ...(cart.dashboardAIDecisions ?? []),
+                    {
+                        ...incomingDecision,
+                        cartName: decisionCartName,
+                    },
+                    ...(cart.dashboardAIDecisions ?? []),
                 ].slice(0, 100),
             },
-            };
-        });
-        };
-
-    function updateCart(name: string, data: Vehicle) {
-    setCarts((previousCarts) => {
-        const existingCart = previousCarts[name];
-
-        const existingAAD = existingCart?.anomalyResult ?? [];
-        const incomingAAD = data.anomalyResult ?? [];
-
-        const mergedAAD = [
-        ...incomingAAD,
-        ...existingAAD,
-        ]
-        .filter(
-            (alert, index, alerts) =>
-            alerts.findIndex(
-                (candidate) =>
-                candidate.timestamp === alert.timestamp &&
-                candidate.message === alert.message,
-            ) === index,
-        )
-        .sort(
-            (a, b) =>
-            new Date(b.timestamp).getTime() -
-            new Date(a.timestamp).getTime(),
-        )
-        .slice(0, 100);
-
-        return {
-        ...previousCarts,
-        [name]: {
-            ...existingCart,
-            ...data,
-
-            anomalyResult: mergedAAD,
-
-            // These histories are managed separately.
-            dashboardAIDecisions:
-            existingCart?.dashboardAIDecisions ?? [],
-
-            logs:
-            data.logs ??
-            existingCart?.logs ??
-            [],
-        },
         };
     });
+    };
+
+    function updateCart(name: string, data: Vehicle) {
+        setCarts((previousCarts) => {
+            const existingCart = previousCarts[name];
+
+            const existingAAD = existingCart?.anomalyResult ?? [];
+            const incomingAAD = data.anomalyResult ?? [];
+
+            const mergedAAD = [
+                ...incomingAAD,
+                ...existingAAD,
+            ]
+                .filter(
+                    (alert, index, alerts) =>
+                        alerts.findIndex(
+                            (candidate) =>
+                                candidate.timestamp === alert.timestamp &&
+                                candidate.message === alert.message
+                        ) === index
+                )
+                .sort(
+                    (a, b) =>
+                        new Date(b.timestamp).getTime() -
+                        new Date(a.timestamp).getTime()
+                )
+                .slice(0, 100);
+
+            const existingLogs = existingCart?.logs ?? [];
+            const incomingLogs = data.logs ?? [];
+
+            const mergedLogs = [
+                ...incomingLogs,
+                ...existingLogs,
+            ]
+                .filter(
+                    (log, index, logs) =>
+                        logs.findIndex(
+                            (candidate) =>
+                                candidate.timestamp === log.timestamp &&
+                                candidate.message === log.message &&
+                                candidate.source === log.source
+                        ) === index
+                )
+                .sort(
+                    (a, b) =>
+                        new Date(b.timestamp).getTime() -
+                        new Date(a.timestamp).getTime()
+                )
+                .slice(0, 500);
+
+            return {
+                ...previousCarts,
+                [name]: {
+                    ...existingCart,
+                    ...data,
+
+                    anomalyResult: mergedAAD,
+
+                    // These histories are managed separately.
+                    dashboardAIDecisions:
+                        existingCart?.dashboardAIDecisions ?? [],
+
+                    logs: mergedLogs,
+                },
+            };
+        });
     }
 
     function deleteCart(name: string) {
@@ -367,7 +361,6 @@ export default function Dashboard() {
             }
         });
             vehicleSocket.subscribe(vehicleSocketCallback);
-            vehicleSocket.subscribeDecisionLogs(decisionLogCallback);
             vehicleSocket.subscribeDashboardAIDecisions(dashboardAIDecisionCallback);
 
         const protocol = new Protocol();
@@ -384,19 +377,16 @@ export default function Dashboard() {
 
         // const locationPins: Marker[] = [];
 
-        return () => {
-            vehicleSocket.unsubscribe(vehicleSocketCallback);
+    return () => {
+        vehicleSocket.unsubscribe(vehicleSocketCallback);
+        vehicleSocket.unsubscribeDashboardAIDecisions(dashboardAIDecisionCallback);
 
-            if (activeCameraCart.current) {
-                vehicleSocket.unsubscribeCamera(activeCameraCart.current, "front");
-                vehicleSocket.unsubscribeCamera(activeCameraCart.current, "rear");
-                
-                vehicleSocket.unsubscribe(vehicleSocketCallback,);
-                vehicleSocket.unsubscribeDecisionLogs(decisionLogCallback);
-                vehicleSocket.unsubscribeDashboardAIDecisions(dashboardAIDecisionCallback);
-                activeCameraCart.current = null;
-            }
-        };
+        if (activeCameraCart.current) {
+            vehicleSocket.unsubscribeCamera(activeCameraCart.current, "front");
+            vehicleSocket.unsubscribeCamera(activeCameraCart.current, "rear");
+            activeCameraCart.current = null;
+        }
+    };
 
     }, [])
 

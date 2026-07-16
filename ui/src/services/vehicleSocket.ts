@@ -1,5 +1,5 @@
 import io from "socket.io-client";
-import type { CartLogUpdate, DashboardAIDecision } from "../types";
+import type { DashboardAIDecision } from "../types";
 
 const socket = io(window.location.origin, {
   transports: ["websocket", "polling"],
@@ -18,8 +18,6 @@ type CameraFrame = {
   camera: CameraName;
   data: string;
 };
-
-type DashboardAIDecisionUpdate = DashboardAIDecision;
 
 function normalizeCartName(name: string) {
   return name.trim().toLowerCase();
@@ -64,6 +62,19 @@ socket.on("camera-update", (data: CameraUpdate) => {
 });
 
 export const vehicleSocket = {
+
+  subscribeDashboardAIDecisions(
+      callback: (decision: DashboardAIDecision) => void,
+  ): void {
+      socket.on("dashboard-ai-decision", callback);
+  },
+
+  unsubscribeDashboardAIDecisions(
+      callback: (decision: DashboardAIDecision) => void,
+  ): void {
+      socket.off("dashboard-ai-decision", callback);
+  },
+
   subscribe(callback: any) {
     socket.on("vehicles", callback);
   },
@@ -95,30 +106,6 @@ export const vehicleSocket = {
       name: normalizeCartName(cartName),
       camera,
     });
-  },
-
-  subscribeDashboardAIDecisions(
-    callback: (decision: DashboardAIDecisionUpdate) => void,
-  ): void {
-    socket.on("dashboard-ai-decision", callback);
-  },
-
-  unsubscribeDashboardAIDecisions(
-    callback: (decision: DashboardAIDecisionUpdate) => void,
-  ): void {
-    socket.off("dashboard-ai-decision", callback);
-  },
-
-  subscribeDecisionLogs(
-    callback: (update: CartLogUpdate) => void,
-  ): void {
-    socket.on("decision-log-update", callback);
-  },
-
-  unsubscribeDecisionLogs(
-    callback: (update: CartLogUpdate) => void,
-  ): void {
-    socket.off("decision-log-update", callback);
   },
   
   unsubscribeCamera(cartName: string, camera: CameraName) {
@@ -152,5 +139,7 @@ export const vehicleSocket = {
     });
 
     socket.emit("camera-frame", frame);
+
+    
   },
 };

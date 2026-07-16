@@ -218,15 +218,6 @@ type CameraFramePayload = {
   data: string;
 };
 
-type DecisionLogPayload = {
-  cartName?: string;
-  timestamp?: string;
-  severity?: string;
-  source?: string;
-  message?: string;
-};
-
-
 function parseCameraSubscription(
   payload: CameraSubscriptionPayload
 ): {
@@ -346,113 +337,7 @@ io.on("connection", (socket) => {
       reason,
     });
   });
-
-  socket.on(
-    "decision-log",
-    async (payload: DecisionLogPayload) => {
-      const cartName = payload.cartName
-        ?.trim()
-        .toLowerCase();
-
-      const message = payload.message?.trim();
-
-      if (!cartName || !message) {
-        console.warn(
-          "[Decision Log] Invalid payload:",
-          payload,
-        );
-        return;
-      }
-
-      const timestamp =
-        payload.timestamp ?? new Date().toISOString();
-
-      const level: "info" | "warn" | "error" | "debug" =
-        payload.severity?.toLowerCase() === "error"
-          ? "error"
-          : payload.severity?.toLowerCase() === "warning" ||
-              payload.severity?.toLowerCase() === "warn"
-            ? "warn"
-            : payload.severity?.toLowerCase() === "debug"
-              ? "debug"
-              : "info";
-
-      const source =
-        payload.source ?? "ai_anomaly_logging";
-
-      const log = {
-        timestamp,
-        level,
-        source,
-        message,
-      };
-
-      io.emit("decision-log-update", {
-        cartName,
-        log,
-      });
-
-      try {
-        const streamKey =
-          `cart:${cartName}:dashboard-ai:input`;
-
-        const aiPayload = {
-          timestamp,
-          cartName,
-          nodeName: source,
-          importance: severityToImportance(level),
-          type: 0,
-          text: message,
-        };
-
-        const entryId = await redis.xAdd(
-          streamKey,
-          "*",
-          {
-            payload: JSON.stringify(aiPayload),
-          },
-        );
-
-        await redis.xTrim(
-          streamKey,
-          "MAXLEN",
-          1000,
-        );
-
-        console.log(
-          "[Dashboard AI] Stored decision log input:",
-          {
-            cartName,
-            streamKey,
-            entryId,
-          },
-        );
-      } catch (error) {
-        console.error(
-          "[Dashboard AI] Failed to store input:",
-          error,
-        );
-      }
-    },
-  );
 });
-
-  function severityToImportance(
-  level: "info" | "warn" | "error" | "debug",
-): number {
-  switch (level) {
-    case "error":
-      return 2;
-
-    case "warn":
-      return 1;
-
-    case "debug":
-    case "info":
-    default:
-      return 0;
-  }
-}
 
 /*
  * API routes should be registered before the SPA fallback.
