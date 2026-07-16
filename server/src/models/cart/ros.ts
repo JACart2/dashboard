@@ -156,6 +156,7 @@ const CART_TOPICS = {
     messageType: "motor_control_interface/msg/VelAngle",
     throttle_rate: 500, // this can be changed based on bandwidth
   },
+  //ai anomamly
   anomaly_result: {
     name: "/aad/alerts",
     messageType: "std_msgs/msg/String",

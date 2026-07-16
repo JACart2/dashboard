@@ -255,30 +255,47 @@ export default function Dashboard() {
     }
 
     function addMarker(cart: Vehicle) {
-        if (cart.longLat == undefined || cart.longLat.length < 2) return
+        if (!cart.longLat || cart.longLat.length < 2) return;
 
-        // Update existing marker if one exists
-        if (!!cartMarkers.current[cart.name]) {
-            cartMarkers.current[cart.name].setLngLat([cart.longLat[0], cart.longLat[1]]);
+        const existingMarker = cartMarkers.current[cart.name];
+
+        if (existingMarker) {
+            existingMarker.setLngLat([
+                cart.longLat[0],
+                cart.longLat[1],
+            ]);
             return;
         }
 
         const customMarker = document.createElement("div");
-        customMarker.style.width = "35px";
-        customMarker.style.height = "35px";
-        customMarker.style.background = "transparent";
+        customMarker.className = styles.cartMarker;
+        customMarker.title = cart.name;
+        customMarker.setAttribute(
+            "aria-label",
+            `${cart.name} cart location`
+        );
 
-        // Create an image element inside the div
+        const label = document.createElement("div");
+        label.className = styles.cartMarkerLabel;
+        label.textContent = cart.name;
+
         const image = document.createElement("img");
-        image.src = '/images/golfcart.png';
-        image.style.width = "100%";
-        image.style.height = "100%";
-        image.style.background = 'transparent';
+        image.className = styles.cartMarkerImage;
+        image.src = "/images/golfcart.png";
+        image.alt = `${cart.name} cart`;
+        image.draggable = false;
 
+        customMarker.appendChild(label);
         customMarker.appendChild(image);
 
-        const marker = new Marker({ element: customMarker })
-            .setLngLat([cart.longLat[0], cart.longLat[1]])
+        const marker = new Marker({
+            element: customMarker,
+            anchor: "bottom",
+        })
+            .setLngLat([
+                cart.longLat[0],
+                cart.longLat[1],
+            ])
             .addTo(map.current!);
 
         cartMarkers.current[cart.name] = marker;
