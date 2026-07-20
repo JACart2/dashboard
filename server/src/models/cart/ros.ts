@@ -154,11 +154,28 @@ private async pushLog(log: CartLogEntry) {
 
   subscribeToTopics(): void {
     // Decode and emit incoming camera frames
-    this.topics["compressed_image"].subscribe((message) => {
-      // console.log(`[ROS] Received 'compressed_image':`, message);
+    this.topics["zed_front"].subscribe((message) => {
+      const data = message?.["data"];
 
-      const url = CameraSubManager.encodeBase64(message?.["data"]);
-      CameraSubManager.emitFrame(this.name, url);
+      if (!data) {
+        console.warn("[Camera] Empty front camera frame");
+        return;
+      }
+
+      const url = CameraSubManager.encodeBase64(data);
+      CameraSubManager.emitFrame(this.name, "front", url);
+    });
+
+    this.topics["zed_rear"].subscribe((message: any) => {
+      const data = message?.["data"];
+
+      if (!data) {
+        console.warn("[Camera] Empty rear camera frame");
+        return;
+      }
+
+      const url = CameraSubManager.encodeBase64(data);
+      CameraSubManager.emitFrame(this.name, "rear", url);
     });
 
     // Update cart location
@@ -176,13 +193,6 @@ private async pushLog(log: CartLogEntry) {
       // The UI repo sends the real selected destination name to the dashboard API.
     });
     
-    this.topics["zed_rear"].subscribe((message: any) => {
-      // console.log(`[ROS] Received 'zed_rear':`, message);
-
-      const url = CameraSubManager.encodeBase64(message?.["data"]);
-      CameraSubManager.emitFrame(this.name, url);
-    });
-
     this.topics["nav_cmd"].subscribe((message) => {
       // console.log(`[ROS] Received 'nav_cmd':`, message);
 
@@ -266,15 +276,15 @@ const CART_TOPICS = {
     messageType: "geometry_msgs/msg/PointStamped",
     throttle_rate: 500,
   },
-  compressed_image: {
-    name: "/zed_front/zed_node_0/right_raw/image_raw_color/compressed",
+  zed_front: {
+    name: "/zed_front/zed_node_0/rgb/color/rect/image/compressed",
     messageType: "sensor_msgs/msg/CompressedImage",
-    throttle_rate: 1000, // this can be changed based on bandwidth
+    throttle_rate: 1000,
   },
   zed_rear: {
-    name: "/zed/zed_node/rgb/image_raw_color/compressed",
-    messageType: "sensor_msgs/msg/Image",
-    throttle_rate: 1000, // this can be changed based on bandwidth
+    name: "/zed_rear/zed_node_1/rgb/color/rect/image/compressed",
+    messageType: "sensor_msgs/msg/CompressedImage",
+    throttle_rate: 1000,
   },
   nav_cmd: {
     name: "/nav_cmd",

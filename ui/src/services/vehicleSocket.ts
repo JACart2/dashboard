@@ -13,12 +13,6 @@ type CameraUpdate = {
   data: string;
 };
 
-type CameraFrame = {
-  name: string;
-  camera: CameraName;
-  data: string;
-};
-
 function normalizeCartName(name: string) {
   return name.trim().toLowerCase();
 }
@@ -123,23 +117,5 @@ export const vehicleSocket = {
       name: normalizeCartName(cartName),
       camera,
     });
-  },
-
-  publishCameraFrame(cartName: string, camera: CameraName, imageData: string) {
-    const frame: CameraFrame = {
-      name: normalizeCartName(cartName),
-      camera,
-      data: imageData,
-    };
-
-    console.log("[Socket.IO] publishing camera-frame:", {
-      name: frame.name,
-      camera,
-      length: imageData.length,
-    });
-
-    socket.emit("camera-frame", frame);
-
-    
   },
 };

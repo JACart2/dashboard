@@ -212,12 +212,6 @@ type CameraSubscriptionPayload =
       camera?: CameraName;
     };
 
-type CameraFramePayload = {
-  name: string;
-  camera?: CameraName;
-  data: string;
-};
-
 function parseCameraSubscription(
   payload: CameraSubscriptionPayload
 ): {
@@ -280,7 +274,7 @@ io.on("connection", (socket) => {
        * If it later distinguishes front/rear cameras, pass the camera
        * field into the manager as well.
        */
-      CameraSubManager.subscribe(subscription.name, socket);
+      CameraSubManager.subscribe(subscription.name, subscription.camera, socket);
     }
   );
 
@@ -302,42 +296,17 @@ io.on("connection", (socket) => {
         ...subscription,
       });
 
-      CameraSubManager.unsubscribe(subscription.name, socket);
+      CameraSubManager.unsubscribe(subscription.name, subscription.camera, socket);
     }
   );
-
-  socket.on("camera-frame", (data: CameraFramePayload) => {
-    if (
-      !data?.name ||
-      !data?.data ||
-      typeof data.data !== "string"
-    ) {
-      console.warn("[Camera] Invalid camera-frame payload");
-      return;
-    }
-
-    const name = data.name.trim().toLowerCase();
-    const camera = data.camera ?? "front";
-
-    if (!name) {
-      console.warn("[Camera] Empty cart name in camera frame");
-      return;
-    }
-
-    io.emit("camera-update", {
-      name,
-      camera,
-      data: data.data,
-    });
-  });
 
   socket.on("disconnect", (reason) => {
     console.log("[Socket.IO] Client disconnected:", {
       id: socket.id,
       reason,
+        });
+      });
     });
-  });
-});
 
 /*
  * API routes should be registered before the SPA fallback.
