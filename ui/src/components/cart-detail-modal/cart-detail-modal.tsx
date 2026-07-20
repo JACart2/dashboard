@@ -262,7 +262,7 @@ function CartLogs({ cart }: { cart: Vehicle }) {
 
       <section className={styles.anomalyColumn}>
         <div className={styles.columnHeader}>
-        <Text strong>AI Decisions & Alerts</Text>
+        <Text strong>AI Alerts</Text>
         <Tag color="purple">{aiMessages.length}</Tag>
         </div>
 
