@@ -19,6 +19,24 @@ interface TripInfoProps {
 export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, onClick }: TripInfoProps) {
     // const navigate = useNavigate();
 
+    function formatEta(seconds?: number) {
+        if (seconds === undefined || seconds === null) {
+            return "Calculating...";
+        }
+
+        const totalSeconds = Math.max(0, Math.round(seconds));
+        const minutes = Math.floor(totalSeconds / 60);
+        const remainingSeconds = totalSeconds % 60;
+
+        if (minutes === 0) {
+            return `${remainingSeconds} sec`;
+        }
+
+        return `${minutes} min ${remainingSeconds
+            .toString()
+            .padStart(2, "0")} sec`;
+    }
+
     function speedToPercent(speed?: number) {
         speed = speed ?? 0;
         const max = 8;
@@ -106,7 +124,10 @@ export default function TripInfoCard({ cart, focusCartCallback, doesNavToRoot, o
                 <div>
                     <span style={{ fontWeight: 'bold' }}>Trip Progress</span>
                     <Progress type="line" percent={cart.tripProgress ?? 0} />
-
+                    <Flex justify="space-between" align="center">
+                        <span>Estimated time remaining</span>
+                        <strong>{formatEta(cart.etaSeconds)}</strong>
+                    </Flex>
                     {!!cart.startLocation && !!cart.endLocation &&
                         <Flex align="center" style={{ gap: '4px' }}>
                             <FaLocationArrow color="blue" />

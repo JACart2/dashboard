@@ -35,6 +35,9 @@ export default class ROSListener {
   static listeners: { [name: string]: ROSListener } = {};
   private anomalyMessages: AADAlert[] = [];
   private logs: CartLogEntry[] = [];
+  private etaSeconds: number | null = null;
+  private tripProgress: number | null = null;
+  private lastTripUpdateAt = 0;
 
   url: string;
   name: string;
@@ -120,6 +123,25 @@ private levelToImportance(
   }
 }
 
+private updateTripTelemetry() {
+  const now = Date.now();
+
+  if (now - this.lastTripUpdateAt < 1000) {
+    return;
+  }
+
+  this.lastTripUpdateAt = now;
+
+  void CartUtils.editCart(this.name, {
+    ...(this.etaSeconds !== null
+      ? { etaSeconds: this.etaSeconds }
+      : {}),
+    ...(this.tripProgress !== null
+      ? { tripProgress: this.tripProgress }
+      : {}),
+  });
+}
+
 private async pushLog(log: CartLogEntry) {
   this.logs = [log, ...this.logs].slice(0, 500);
 
@@ -193,6 +215,45 @@ private async pushLog(log: CartLogEntry) {
       // The UI repo sends the real selected destination name to the dashboard API.
     });
     
+
+    this.topics["eta"].subscribe((message: any) => {
+      const etaSeconds = Number(message?.data);
+
+      if (!Number.isFinite(etaSeconds)) {
+        console.warn(
+          `[ROS] Invalid /eta message for ${this.name}:`,
+          message
+        );
+        return;
+      }
+
+      this.etaSeconds = Math.max(
+        0,
+        Math.round(etaSeconds)
+      );
+
+      this.updateTripTelemetry();
+    });
+
+    this.topics["eta_percentage"].subscribe((message: any) => {
+      const tripProgress = Number(message?.data);
+
+      if (!Number.isFinite(tripProgress)) {
+        console.warn(
+          `[ROS] Invalid /eta_percentage message for ${this.name}:`,
+          message
+        );
+        return;
+      }
+
+      this.tripProgress = Math.max(
+        0,
+        Math.min(100, Math.round(tripProgress))
+      );
+
+      this.updateTripTelemetry();
+    });
+
     this.topics["nav_cmd"].subscribe((message) => {
       // console.log(`[ROS] Received 'nav_cmd':`, message);
 
@@ -290,6 +351,16 @@ const CART_TOPICS = {
     name: "/nav_cmd",
     messageType: "motor_control_interface/msg/VelAngle",
     throttle_rate: 500, // this can be changed based on bandwidth
+  },
+  eta: {
+    name: "/eta",
+    messageType: "std_msgs/msg/UInt64",
+    throttle_rate: 0,
+  },
+  eta_percentage: {
+    name: "/eta_percentage",
+    messageType: "std_msgs/msg/UInt64",
+    throttle_rate: 0,
   },
 
   //ai anomamly

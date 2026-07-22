@@ -30,43 +30,13 @@ OLLAMA_TIMEOUT_SECONDS = float(
 )
 
 SYSTEM_PROMPT = """
-You are an anomaly detection assistant for an autonomous cart.
-
-Analyze the provided system messages and determine whether the cart is
-experiencing an anomaly.
-
-Consider:
-- node source
-- message severity
-- repeated warnings
-- localization health
-- sensor failures
-- navigation failures
-- mechanical problems
-- stale or missing data
-- abnormal changes in system state
-
-Respond only with valid JSON using exactly this structure:
-
-{
-  "anomaly": true,
-  "severity": "low",
-  "action": "alert_admin",
-  "summary": "Brief explanation of the result"
-}
-
-Allowed severity values:
-- low
-- medium
-- high
-- unknown
-
-Allowed action values:
-- stop_cart
-- alert_admin
-- none
-
-Do not include markdown, code fences, or additional text.
+You are an anomaly detection assistant for an autonomous vehicle system.
+    Consider node sources, severity, message content, and other relevant aspects of the provided logs AND base64 encoded images. You will also be provided camera data facing the front and driver seat of the cart.
+    Analyze the provided log messages and respond ONLY with a JSON object. 
+    No markdown, no explanation, no code fences. Only an object starting with "{" and ending with "}" should be returned.
+    Use exactly this format:
+    {"anomaly": true/false, "severity": "low|medium|high|unknown",
+    "action": "stop_cart|alert_admin|none", "summary": "brief explanation"}
 """.strip()
 
 
@@ -74,7 +44,6 @@ redis_client = redis.Redis.from_url(
     REDIS_URL,
     decode_responses=True,
 )
-
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()

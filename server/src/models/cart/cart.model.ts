@@ -8,6 +8,7 @@ const CartModel = Object.freeze({
   endLocation: null as string,
   helpRequested: null as boolean,
   anomalyResult: null as string,
+  etaSeconds: null as number,
 
   // Dashboard monitoring/logging fields
   logs: null as {

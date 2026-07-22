@@ -46,6 +46,7 @@ export interface Vehicle {
   name: string;
   speed?: number;
   tripProgress?: number;
+  etaSeconds?: number;
   longLat?: [number, number];
   startLocation?: string;
   endLocation?: string;
