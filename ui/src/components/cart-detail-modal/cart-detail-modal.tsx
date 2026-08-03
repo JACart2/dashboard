@@ -383,13 +383,13 @@ function CartAI({ cart }: { cart: Vehicle }) {
 
       <section className={styles.aiHistoryBox}>
         <div className={styles.columnHeader}>
-          <Text strong>Dashboard AI Decision History</Text>
+          <Text strong>Dashboard AI History</Text>
           <Tag color="purple">{decisions.length}</Tag>
         </div>
 
         <div className={styles.scrollableAIList}>
           {decisions.length === 0 ? (
-            <Empty description="No dashboard AI decision history" />
+            <Empty description="No dashboard AI history" />
           ) : (
             decisions.map((decision, index) => (
               <DashboardAIDecisionEntry

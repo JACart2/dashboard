@@ -13,7 +13,7 @@ The dashboard currently supports:
 - Redis-backed cart state
 - HTTPS using a local or self-signed certificate
 - A bind-mounted Docker development environment
-- Future AI-assisted log analysis through a separate worker service
+- AI-assisted log analysis through a separate worker service
 
 ---
 
@@ -642,7 +642,7 @@ The dashboard uses Socket.IO for:
 - live cart updates
 - camera frames
 - AI analysis updates
-- future real-time dashboard events
+- real-time dashboard events
 
 Test the Socket.IO polling endpoint:
 
@@ -674,18 +674,34 @@ SOCKET_MAX_BUFFER_BYTES=5000000
 
 ## Camera Streaming
 
-Camera images are not sent directly from ROS 2 to the dashboard.
+Camera images are received directly by the dashboard server through each cart's ROSBridge connection.
 
-The cart UI subscribes to a compressed image topic through ROSBridge, converts it to a browser image URL, and sends it to the dashboard through Socket.IO.
+The current camera data path is:
 
-Example topics:
+```text
+ZED camera
+    |
+    | ROS 2 CompressedImage topic
+    v
+ROSBridge on the cart
+    |
+    | WebSocket / roslib
+    v
+Dashboard Server
+    |
+    | Socket.IO camera-update event
+    v
+Dashboard Browser
+```
+
+The dashboard server creates a ROS connection for each registered cart using the cart's ROSBridge URL. It subscribes to the front and rear compressed camera topics using `roslib`.
+
+The dashboard server currently uses these topics:
 
 ```text
 /zed_front/zed_node_0/rgb/color/rect/image/compressed
 /zed_rear/zed_node_1/rgb/color/rect/image/compressed
 ```
-
-The exact topic names may differ by cart configuration.
 
 The topic type must be:
 
@@ -693,68 +709,253 @@ The topic type must be:
 sensor_msgs/msg/CompressedImage
 ```
 
-The cart UI emits:
+Camera subscriptions are configured with a throttle rate of:
+
+```text
+1000 milliseconds
+```
+
+This limits each camera stream to approximately one frame per second before the frame is sent to dashboard clients.
+
+When a compressed image is received, the server reads the message's `data` field and converts it into a browser-compatible image URL:
+
+```text
+data:image/jpeg;base64,<image-data>
+```
+
+The dashboard UI does not receive every camera stream automatically. When a camera view is opened, the browser sends a Socket.IO subscription request:
 
 ```ts
-socket.emit("camera-frame", {
-  name: cartName,
+socket.emit("subscribe-camera", {
+  name: cartName.toLowerCase(),
   camera: "front",
-  data: base64Image,
 });
 ```
 
 or:
 
 ```ts
-socket.emit("camera-frame", {
-  name: cartName,
+socket.emit("subscribe-camera", {
+  name: cartName.toLowerCase(),
   camera: "rear",
-  data: base64Image,
 });
 ```
 
-The dashboard server emits:
+The dashboard server tracks subscriptions separately using the cart name and camera name:
+
+```text
+<cart-name>:front
+<cart-name>:rear
+```
+
+For example:
+
+```text
+james:front
+madison:rear
+```
+
+When a frame is received, the server sends it only to dashboard clients subscribed to that cart and camera.
+
+The server emits:
 
 ```text
 camera-update
 ```
 
-to connected dashboard clients.
+with the following payload:
+
+```ts
+{
+  name: cartName,
+  camera: "front" | "rear",
+  data: imageDataUrl,
+}
+```
+
+When the camera view is closed or changed, the dashboard UI sends:
+
+```ts
+socket.emit("unsubscribe-camera", {
+  name: cartName.toLowerCase(),
+  camera: "front",
+});
+```
+
+or:
+
+```ts
+socket.emit("unsubscribe-camera", {
+  name: cartName.toLowerCase(),
+  camera: "rear",
+});
+```
 
 ### Verify Camera Topics
+
+List the available ZED image topics:
 
 ```bash
 ros2 topic list | grep -E "zed.*compressed|zed.*image"
 ```
 
+Verify the front camera topic:
+
 ```bash
-ros2 topic info /path/to/image/compressed
+ros2 topic info \
+  /zed_front/zed_node_0/rgb/color/rect/image/compressed
+```
+
+Verify the rear camera topic:
+
+```bash
+ros2 topic info \
+  /zed_rear/zed_node_1/rgb/color/rect/image/compressed
+```
+
+The expected message type is:
+
+```text
+sensor_msgs/msg/CompressedImage
+```
+
+Check the publishing frequency:
+
+```bash
+ros2 topic hz \
+  /zed_front/zed_node_0/rgb/color/rect/image/compressed
 ```
 
 ```bash
-ros2 topic hz /path/to/image/compressed
+ros2 topic hz \
+  /zed_rear/zed_node_1/rgb/color/rect/image/compressed
+```
+
+Inspect a single message:
+
+```bash
+ros2 topic echo \
+  /zed_front/zed_node_0/rgb/color/rect/image/compressed \
+  --once
+```
+
+The message should contain fields similar to:
+
+```text
+header:
+format: jpeg
+data:
+```
+
+### Verify the Cart ROSBridge Connection
+
+The dashboard server must be able to reach the ROSBridge URL registered for the cart.
+
+A cart should normally be registered with an explicit ROSBridge URL:
+
+```json
+{
+  "name": "james",
+  "url": "ws://<cart-address>:9090",
+  "port": 9090
+}
+```
+
+Check that ROSBridge is running on the cart:
+
+```bash
+ros2 node list | grep rosbridge
+```
+
+Check that port `9090` is listening:
+
+```bash
+ss -lntp | grep 9090
+```
+
+From the dashboard host, test whether the cart's ROSBridge port is reachable:
+
+```bash
+nc -vz <cart-address> 9090
 ```
 
 ### Camera Troubleshooting
 
-If the cart UI only logs the subscription but receives no frames:
+If no camera image appears on the dashboard, check the following:
+
+* The cart is registered with the correct ROSBridge WebSocket URL.
+* ROSBridge is running and listening on port `9090`.
+* The dashboard host can reach the cart over the configured network.
+* The camera topic exists on the cart.
+* The camera topic has an active publisher.
+* The topic uses `sensor_msgs/msg/CompressedImage`.
+* The configured topic name exactly matches the published topic.
+* The ZED camera node is running without camera-open or corrupted-frame errors.
+* The dashboard browser successfully connected to Socket.IO.
+* The browser sent the correct `subscribe-camera` event.
+* The cart name used by the UI matches the registered cart name.
+* The selected camera is either `front` or `rear`.
+* The dashboard server's Socket.IO payload limit is large enough for the compressed frame.
+
+Useful dashboard server logs include:
 
 ```text
-[Camera] subscribing to compressed camera topic: ...
+[Socket.IO] Client connected:
 ```
 
-check:
+```text
+[Camera] Client subscribed:
+```
 
-- The topic has a publisher.
-- The topic type is `sensor_msgs/msg/CompressedImage`.
-- ROSBridge is connected.
-- ROSBridge logs show a subscription to the exact topic.
-- The browser is using the newest UI build.
-- The ROSBridge instance is on the correct ROS domain.
+```text
+[Camera] Empty front camera frame
+```
 
-If the dashboard shows the image alt text instead of an image, verify that ROSBridge is already sending the `data` field as a base64 string. Do not encode an already base64-encoded string a second time.
+```text
+[Camera] Empty rear camera frame
+```
 
----
+If the server logs an empty camera frame, inspect the ROS message and confirm that its `data` field is populated.
+
+If the dashboard displays broken-image alt text, inspect the `camera-update` event in the browser developer tools. The `data` value should begin with:
+
+```text
+data:image/jpeg;base64,
+```
+
+Do not add the prefix a second time if the value already contains it.
+
+If the browser connects but receives no updates, verify that the subscription uses the normalized lowercase cart name:
+
+```text
+james
+```
+
+rather than:
+
+```text
+James
+```
+
+Also verify that the camera value in the subscription matches the expected value exactly:
+
+```text
+front
+```
+
+or:
+
+```text
+rear
+```
+
+Camera frames can be larger than the default Socket.IO payload limit. The dashboard server currently reads the maximum payload size from:
+
+```env
+SOCKET_MAX_BUFFER_BYTES=5000000
+```
+
+Increase this value only when valid compressed frames exceed the configured limit.
 
 ## CORS
 
@@ -823,48 +1024,263 @@ docker compose up -d
 
 ## AI Log Analysis
 
-The recommended AI architecture is a separate worker and model service:
+The dashboard supports two separate but related anomaly-monitoring paths:
+
+1. A local anomaly detection system that runs on or near the cart.
+2. A separate dashboard AI system that performs remote, operator-facing log analysis.
+
+These systems may receive the same raw ROS 2 logs, but they process them independently and produce separate results.
 
 ```text
+                              ROS 2 system logs
+                                     |
+                   +-----------------+-----------------+
+                   |                                   |
+                   v                                   v
+        Cart-Side Anomaly Detection            Dashboard Server
+                   |                                   |
+                   | Local AI analysis                 | Redis input stream
+                   v                                   v
+              /aad/alerts                     Dashboard AI Worker
+                   |                                   |
+                   v                                   v
+           Dashboard Server                  Configured AI model
+                   |                                   |
+                   v                                   v
+             Cart Operator                    Dashboard AI decision
+```
+
+### Cart-Side Anomaly Detection
+
+The anomaly detection repository is a separate cart-side system that supports a local AI model.
+
+It receives operational logs and recent system context, analyzes them locally, and attempts to determine what caused an issue.
+
+The cart-side anomaly detection system publishes its resulting anomaly messages to:
+
+```text
+/aad/alerts
+```
+
+using the message type:
+
+```text
+std_msgs/msg/String
+```
+
+The dashboard server subscribes to this topic through the cart's ROSBridge connection.
+
+When an anomaly alert is received, the dashboard stores it with the cart's state and displays it to the cart operator.
+
+These messages represent the output of the local anomaly detection system. They may contain a summary, diagnosis, or explanation generated by the cart-side AI model.
+
+The dashboard AI does **not** read, reanalyze, or use `/aad/alerts` messages as model input.
+
+### Dashboard AI Log Input
+
+The dashboard AI receives raw anomaly-related logs from:
+
+```text
+/ai_anomaly_logging
+```
+
+using the message type:
+
+```text
+anomaly_msg/msg/AnomalyMsg
+```
+
+This is the same type of operational log information that may also be available to the cart-side anomaly detection system.
+
+However, the dashboard AI processes these logs independently.
+
+An incoming `AnomalyMsg` may include:
+
+```text
+header
+node_name
+importance
+type
+msg
+```
+
+The dashboard converts the message into an internal log entry containing:
+
+```text
+timestamp
+cart name
+source node
+importance
+message type
+log text
+```
+
+The log is displayed in the dashboard and written to a cart-specific Redis stream:
+
+```text
+cart:<cart-name>:dashboard-ai:input
+```
+
+For example:
+
+```text
+cart:james:dashboard-ai:input
+```
+
+The dashboard AI worker reads from these Redis streams and builds its own analysis context.
+
+### Separate Analysis Paths
+
+The two anomaly systems should not be treated as a single AI pipeline.
+
+The cart-side path is:
+
+```text
+ROS 2 logs
+    |
+    v
+Cart-side anomaly detection repository
+    |
+    v
+Local AI model
+    |
+    v
+/aad/alerts
+    |
+    v
+Dashboard operator view
+```
+
+The dashboard AI path is:
+
+```text
+/ai_anomaly_logging
+    |
+    v
 Dashboard Server
     |
     v
-Redis job queue
+Redis input stream
     |
     v
-AI log worker
+Dashboard AI Worker
     |
     v
-Ollama
+Configured dashboard model
     |
     v
-Redis result channel
+Dashboard AI decision
     |
     v
-Dashboard UI
+Dashboard operator view
 ```
 
-The AI model should not be embedded directly into the dashboard server container.
+Both results may appear in the dashboard, but they come from different systems.
 
-The model should:
+The local anomaly alert represents the cart-side anomaly detection system's conclusion.
 
-- summarize related log messages
-- identify likely subsystem failures
-- recommend operator checks
-- provide a confidence score
-- return structured JSON
+The dashboard AI decision represents a separate analysis performed by the dashboard worker using the raw logs it has received.
 
-The model should not:
+### Separation of Responsibilities
 
-- apply brakes
-- resume navigation
-- change steering
-- clear critical alerts
-- control safety-critical cart behavior
+The cart-side anomaly detection system is intended to:
 
-Safety decisions must remain deterministic and outside the language model.
+* operate locally with the cart
+* maintain recent cart-side context
+* detect anomalies
+* use a local AI model
+* publish anomaly results through `/aad/alerts`
+* continue operating without the dashboard AI
+* provide local anomaly information to the cart operator
 
----
+The dashboard AI system is intended to:
+
+* receive raw `/ai_anomaly_logging` messages
+* maintain its own dashboard-side context
+* analyze logs independently of the cart-side model
+* provide an additional operator-facing summary
+* support centralized monitoring across multiple carts
+* support research comparisons between AI models
+* remain configurable independently of the anomaly detection repository
+
+### Dashboard AI Worker
+
+The dashboard AI worker is implemented as a separate service from the main dashboard server.
+
+It reads raw log entries from Redis, builds a recent context window, sends that context to the configured inference service, and publishes a structured dashboard AI decision.
+
+Dashboard AI decisions are published through the Redis channel:
+
+```text
+dashboard-ai:decision
+```
+
+The dashboard server forwards them to connected browsers using the Socket.IO event:
+
+```text
+dashboard-ai-decision
+```
+
+The dashboard AI worker does not subscribe to:
+
+```text
+/aad/alerts
+```
+
+and does not use local anomaly alerts as part of its model context.
+
+### Configurability
+
+The dashboard AI configuration is independent of the cart-side anomaly detection configuration.
+
+The current development settings include:
+
+```env
+REDIS_URL=redis://redis:6379
+OLLAMA_URL=http://ollama:11434
+OLLAMA_MODEL=mistral
+DASHBOARD_AI_MODE=shadow
+AI_INTERVAL_SECONDS=20
+AI_CACHE_MAX_ITEMS=100
+AI_CACHE_MAX_AGE_SECONDS=30
+```
+
+These values are temporary development defaults and may change.
+
+The dashboard AI can independently configure:
+
+* the model provider
+* the model name
+* the processing interval
+* the number of retained log entries
+* the age of retained context
+* the prompt format
+* the output schema
+* the operating mode
+
+Changing the dashboard model does not require changing the model used by the anomaly detection repository.
+
+For example, the cart-side system may use a smaller model optimized for local performance, while the dashboard may use a larger model optimized for detailed operator explanations.
+
+### Operator Display
+
+The dashboard may display both forms of analysis:
+
+```text
+Local Anomaly Alert
+Source: cart-side anomaly detection
+ROS topic: /aad/alerts
+```
+
+```text
+Dashboard AI Decision
+Source: dashboard AI worker
+Input: /ai_anomaly_logging
+```
+
+The interface should clearly identify the source of each result so the operator understands whether a message came from the local cart-side system or from the dashboard AI.
+
+The dashboard should not present the two results as though one generated the other.
 
 ## Common Commands
 
