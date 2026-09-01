@@ -1,9 +1,8 @@
 import { Router } from "express";
-import { redis, redisPub, redisSub } from "../../config/db";
+import { redis } from "../../config/db";
 import CartModel from "./cart.model";
 import { Utils, CartUtils } from "../../config/utils";
 import ROSListener from "./ros";
-import CameraSubManager from "../../config/camera-subs";
 
 const vehicleRouter = Router();
 
@@ -45,7 +44,13 @@ vehicleRouter.post("/register/", async (req, res) => {
 	  helpRequested: existingVehicle.helpRequested ?? false,
   });
 
-  ROSListener.listeners[name] = new ROSListener(url, name);
+  ROSListener.listeners[name]?.ros.close();
+
+  ROSListener.listeners[name] = new ROSListener(
+    url,
+    name,
+    existingVehicle.logs ?? []
+  );
 
   res.json({ name, url });
 });

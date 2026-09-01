@@ -1,6 +1,7 @@
 import { Empty, Modal, Tabs, Typography, Tag } from "antd";
-import type { CartLogEntry, Vehicle } from "../../types";
+import type { CartLogEntry, Vehicle, DashboardAIDecision } from "../../types";
 import styles from "./cart-detail-modal.module.css";
+
 
 const { Text, Paragraph } = Typography;
 
@@ -95,16 +96,19 @@ function CartOverview({ cart }: { cart: Vehicle }) {
         </div>
       </div>
 
-      <div>
-        <Text strong>Anomaly:</Text>
-        <div>
-          {cart.anomalyResult ? (
-            <Tag color="red">{cart.anomalyResult}</Tag>
-          ) : (
-            <Tag color="green">None</Tag>
-          )}
+        <div className={styles.anomalyBlock}>
+          <Text strong>Anomaly:</Text>
+
+          <div className={styles.anomalyContainer}>
+            {cart.anomalyResult?.length ? (
+              <Tag color="red" className={styles.anomalyTag}>
+                {cart.anomalyResult?.[0]?.message ?? "None"}
+              </Tag>
+            ) : (
+              <Tag color="green">None</Tag>
+            )}
+          </div>
         </div>
-      </div>
 
       <InfoBlock
         label="Location"
@@ -182,64 +186,297 @@ function CartCamera({
 
 function CartLogs({ cart }: { cart: Vehicle }) {
   const logs = cart.logs ?? [];
+  const localAADMessages = cart.anomalyResult ?? [];
+  const dashboardAIDecisions = cart.dashboardAIDecisions ?? [];
 
-  if (logs.length === 0) {
-    return <Empty description="No cart logs or events received yet" />;
-  }
+  const aiMessages = [
+    ...localAADMessages.map((alert) => ({
+      id: `local-${alert.timestamp}-${alert.message}`,
+      timestamp: alert.timestamp,
+      message: alert.message,
+      source: "local-aad" as const,
+      anomaly: true,
+      severity: undefined,
+      action: undefined,
+      model: undefined,
+    })),
+
+    ...dashboardAIDecisions.map((decision, index) => ({
+      id:
+        decision.requestId ??
+        `dashboard-${decision.timestamp}-${index}`,
+      timestamp: decision.timestamp,
+      message: decision.summary,
+      source: "dashboard-ai" as const,
+      anomaly: decision.anomaly,
+      severity: decision.severity,
+      action: decision.action,
+      model: decision.model,
+    })),
+  ].sort(
+    (a, b) =>
+      new Date(b.timestamp).getTime() -
+      new Date(a.timestamp).getTime()
+  );
 
   return (
-    <div className={styles.logsPanel}>
-      {logs.map((log, index) => (
-        <div key={`${log.timestamp}-${index}`} className={styles.logLine}>
-          <div className={styles.logHeader}>
-            <Tag color={getLogLevelColor(log.level)}>
-              {log.level.toUpperCase()}
-            </Tag>
-
-            {log.source && <Text strong>{log.source}</Text>}
-
-            <Text type="secondary" className={styles.logTimestamp}>
-              {formatTimestamp(log.timestamp)}
-            </Text>
-          </div>
-
-          <div className={styles.logMessage}>{log.message}</div>
+    <div className={styles.logsColumns}>
+      <section className={styles.logsColumn}>
+        <div className={styles.columnHeader}>
+          <Text strong>Cart Logs</Text>
+          <Tag>{logs.length}</Tag>
         </div>
-      ))}
+
+        <div className={styles.scrollableLogList}>
+          {logs.length === 0 ? (
+            <Empty description="No cart logs or events received yet" />
+          ) : (
+            logs.map((log, index) => (
+              <div
+                key={`${log.timestamp}-${index}`}
+                className={styles.logLine}
+              >
+                <div className={styles.logHeader}>
+                  <Tag color={getLogLevelColor(log.level)}>
+                    {log.level.toUpperCase()}
+                  </Tag>
+
+                  {log.source && <Text strong>{log.source}</Text>}
+
+                  <Text
+                    type="secondary"
+                    className={styles.logTimestamp}
+                  >
+                    {formatTimestamp(log.timestamp)}
+                  </Text>
+                </div>
+
+                <div className={styles.logMessage}>
+                  {log.message}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className={styles.anomalyColumn}>
+        <div className={styles.columnHeader}>
+        <Text strong>AI Alerts</Text>
+        <Tag color="purple">{aiMessages.length}</Tag>
+        </div>
+
+        <div className={styles.scrollableAnomalyList}>
+          {aiMessages.length === 0 ? (
+            <Empty description="No local or dashboard AI messages received yet" />
+          ) : (
+            aiMessages.map((entry) => (
+              <div
+                key={entry.id}
+                className={
+                  entry.source === "local-aad"
+                    ? styles.localAADLine
+                    : styles.dashboardAILine
+                }
+              >
+                <div className={styles.anomalyHeader}>
+                  {entry.source === "local-aad" ? (
+                    <Tag color="red">LOCAL AAD</Tag>
+                  ) : (
+                    <Tag color="purple">DASHBOARD AI</Tag>
+                  )}
+
+                  {entry.source === "dashboard-ai" && (
+                    <>
+                      <Tag color={entry.anomaly ? "red" : "green"}>
+                        {entry.anomaly ? "ANOMALY" : "NORMAL"}
+                      </Tag>
+
+                      {entry.severity && (
+                        <Tag color={getDashboardSeverityColor(entry.severity)}>
+                          {entry.severity.toUpperCase()}
+                        </Tag>
+                      )}
+
+                      {entry.action && <Tag>{entry.action}</Tag>}
+                    </>
+                  )}
+
+                  <Text
+                    type="secondary"
+                    className={styles.logTimestamp}
+                  >
+                    {formatTimestamp(entry.timestamp)}
+                  </Text>
+                </div>
+
+                <div className={styles.anomalyMessage}>
+                  {entry.message}
+                </div>
+
+                {entry.source === "dashboard-ai" && entry.model && (
+                  <Text type="secondary">
+                    Model: {entry.model}
+                  </Text>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+      </section>
     </div>
   );
 }
 
+
 function CartAI({ cart }: { cart: Vehicle }) {
-  const logs = cart.logs ?? [];
+  const decisions = cart.dashboardAIDecisions ?? [];
+  const latestDecision = decisions[0];
 
   return (
     <div className={styles.aiPanel}>
-      <div className={styles.aiSummaryBox}>
-        <Text strong>AI Log Summary</Text>
+      <section className={styles.aiSummaryBox}>
+        <div className={styles.aiHeader}>
+          <Text strong>Dashboard AI</Text>
 
-        {cart.aiLogSummary ? (
-          <Paragraph className={styles.aiSummaryText}>
-            {cart.aiLogSummary}
-          </Paragraph>
+          <Tag color={cart.dashboardAIProcessing ? "blue" : "green"}>
+            {cart.dashboardAIProcessing ? "ANALYZING" : "IDLE"}
+          </Tag>
+        </div>
+
+        {latestDecision ? (
+          <>
+            <div className={styles.aiDecisionTags}>
+              <Tag color={latestDecision.anomaly ? "red" : "green"}>
+                {latestDecision.anomaly ? "ANOMALY" : "NORMAL"}
+              </Tag>
+
+              <Tag color={getSeverityColor(latestDecision.severity)}>
+                {latestDecision.severity.toUpperCase()}
+              </Tag>
+
+              <Tag>{latestDecision.action}</Tag>
+            </div>
+
+            <Paragraph className={styles.aiSummaryText}>
+              {latestDecision.summary}
+            </Paragraph>
+
+            <div className={styles.aiMetadata}>
+              <Text type="secondary">
+                Model: {latestDecision.model}
+              </Text>
+
+              <Text type="secondary">
+                Inputs: {latestDecision.inputMessageCount}
+              </Text>
+
+              <Text type="secondary">
+                {formatTimestamp(latestDecision.timestamp)}
+              </Text>
+            </div>
+          </>
         ) : (
-          <Empty description="AI log summary not connected yet" />
+          <Empty description="No dashboard AI decisions received yet" />
         )}
-      </div>
+      </section>
 
-      <div className={styles.aiInputsBox}>
-        <Text strong>Future AI Inputs</Text>
+      <section className={styles.aiHistoryBox}>
+        <div className={styles.columnHeader}>
+          <Text strong>Dashboard AI History</Text>
+          <Tag color="purple">{decisions.length}</Tag>
+        </div>
 
-        <ul>
-          <li>Recent cart logs: {logs.length}</li>
-          <li>Current destination: {cart.endLocation ?? "Unknown"}</li>
-          <li>Help requested: {cart.helpRequested ? "Yes" : "No"}</li>
-          <li>Anomaly result: {cart.anomalyResult ?? "None"}</li>
-          <li>Current speed: {cart.speed == null ? "N/A" : cart.speed}</li>
-        </ul>
-      </div>
+        <div className={styles.scrollableAIList}>
+          {decisions.length === 0 ? (
+            <Empty description="No dashboard AI history" />
+          ) : (
+            decisions.map((decision, index) => (
+              <DashboardAIDecisionEntry
+                key={`${decision.timestamp}-${index}`}
+                decision={decision}
+              />
+            ))
+          )}
+        </div>
+      </section>
     </div>
   );
+}
+
+function DashboardAIDecisionEntry({
+  decision,
+}: {
+  decision: DashboardAIDecision;
+}) {
+  return (
+    <div className={styles.aiDecisionLine}>
+      <div className={styles.aiDecisionHeader}>
+        <Tag color={decision.anomaly ? "red" : "green"}>
+          {decision.anomaly ? "ANOMALY" : "NORMAL"}
+        </Tag>
+
+        <Tag color={getSeverityColor(decision.severity)}>
+          {decision.severity.toUpperCase()}
+        </Tag>
+
+        <Tag>{decision.action}</Tag>
+
+        <Text
+          type="secondary"
+          className={styles.logTimestamp}
+        >
+          {formatTimestamp(decision.timestamp)}
+        </Text>
+      </div>
+
+      <Paragraph className={styles.aiDecisionSummary}>
+        {decision.summary}
+      </Paragraph>
+
+      <Text type="secondary">
+        {decision.model} · {decision.inputMessageCount} input messages
+      </Text>
+    </div>
+  );
+}
+
+function getSeverityColor(
+  severity: DashboardAIDecision["severity"]
+) {
+  switch (severity) {
+    case "high":
+      return "red";
+
+    case "medium":
+      return "orange";
+
+    case "low":
+      return "gold";
+
+    case "unknown":
+    default:
+      return "default";
+  }
+}
+
+function getDashboardSeverityColor(
+  severity: "low" | "medium" | "high" | "unknown"
+) {
+  switch (severity) {
+    case "high":
+      return "red";
+
+    case "medium":
+      return "orange";
+
+    case "low":
+      return "gold";
+
+    case "unknown":
+    default:
+      return "default";
+  }
 }
 
 function getLogLevelColor(level: CartLogEntry["level"]) {

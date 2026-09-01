@@ -1,4 +1,5 @@
 import io from "socket.io-client";
+import type { DashboardAIDecision } from "../types";
 
 const socket = io(window.location.origin, {
   transports: ["websocket", "polling"],
@@ -9,12 +10,6 @@ type CameraName = "front" | "rear";
 type CameraUpdate = {
   name: string;
   camera?: CameraName;
-  data: string;
-};
-
-type CameraFrame = {
-  name: string;
-  camera: CameraName;
   data: string;
 };
 
@@ -61,6 +56,19 @@ socket.on("camera-update", (data: CameraUpdate) => {
 });
 
 export const vehicleSocket = {
+
+  subscribeDashboardAIDecisions(
+      callback: (decision: DashboardAIDecision) => void,
+  ): void {
+      socket.on("dashboard-ai-decision", callback);
+  },
+
+  unsubscribeDashboardAIDecisions(
+      callback: (decision: DashboardAIDecision) => void,
+  ): void {
+      socket.off("dashboard-ai-decision", callback);
+  },
+
   subscribe(callback: any) {
     socket.on("vehicles", callback);
   },
@@ -93,7 +101,7 @@ export const vehicleSocket = {
       camera,
     });
   },
-
+  
   unsubscribeCamera(cartName: string, camera: CameraName) {
     const key = cameraKey(cartName, camera);
 
@@ -109,21 +117,5 @@ export const vehicleSocket = {
       name: normalizeCartName(cartName),
       camera,
     });
-  },
-
-  publishCameraFrame(cartName: string, camera: CameraName, imageData: string) {
-    const frame: CameraFrame = {
-      name: normalizeCartName(cartName),
-      camera,
-      data: imageData,
-    };
-
-    console.log("[Socket.IO] publishing camera-frame:", {
-      name: frame.name,
-      camera,
-      length: imageData.length,
-    });
-
-    socket.emit("camera-frame", frame);
   },
 };

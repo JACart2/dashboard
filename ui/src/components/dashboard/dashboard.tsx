@@ -9,7 +9,7 @@ import { Protocol } from "pmtiles";
 import maplibregl, { Marker } from "maplibre-gl";
 import { vehicleSocket } from "../../services/vehicleSocket";
 import { vehicleService } from "../../services/vehicleService";
-import { Vehicle, VehicleMap } from "../../types";
+import { Vehicle, VehicleMap, DashboardAIDecision } from "../../types";
 
 const TripInfoCard = lazy(() => import("../trip-info-card/trip-info-card"));
 
@@ -77,14 +77,127 @@ export default function Dashboard() {
         setCartImages({});
     };
 
+    const dashboardAIDecisionCallback = (
+    incomingDecision: DashboardAIDecision,
+) => {
+    console.log(
+        "[Dashboard] dashboard AI decision received:",
+        incomingDecision,
+    );
+
+    const decisionCartName =
+        typeof incomingDecision.cartName === "string"
+            ? incomingDecision.cartName
+            : "";
+
+    if (!decisionCartName.trim()) {
+        console.warn(
+            "[Dashboard] Ignoring dashboard AI decision without cartName:",
+            incomingDecision,
+        );
+
+        return;
+    }
+
+    setCarts((previousCarts) => {
+        const matchingCartName = Object.keys(previousCarts).find(
+            (name) =>
+                name.trim().toLowerCase() ===
+                decisionCartName.trim().toLowerCase(),
+        );
+
+        if (!matchingCartName) {
+            console.warn(
+                "[Dashboard] No matching cart for dashboard AI decision:",
+                decisionCartName,
+            );
+
+            return previousCarts;
+        }
+
+        const cart = previousCarts[matchingCartName];
+
+        return {
+            ...previousCarts,
+            [matchingCartName]: {
+                ...cart,
+                dashboardAIDecisions: [
+                    {
+                        ...incomingDecision,
+                        cartName: decisionCartName,
+                    },
+                    ...(cart.dashboardAIDecisions ?? []),
+                ].slice(0, 100),
+            },
+        };
+    });
+    };
+
     function updateCart(name: string, data: Vehicle) {
-        setCarts(prevCarts => ({
-            ...prevCarts,
-            [name]: {
-                ...prevCarts[name], // Merge existing cart data
-                ...data
-            }
-        }));
+        setCarts((previousCarts) => {
+            const existingCart = previousCarts[name];
+
+            const existingAAD = existingCart?.anomalyResult ?? [];
+            const incomingAAD = data.anomalyResult ?? [];
+
+            const mergedAAD = [
+                ...incomingAAD,
+                ...existingAAD,
+            ]
+                .filter(
+                    (alert, index, alerts) =>
+                        alerts.findIndex(
+                            (candidate) =>
+                                candidate.timestamp === alert.timestamp &&
+                                candidate.message === alert.message
+                        ) === index
+                )
+                .sort(
+                    (a, b) =>
+                        new Date(b.timestamp).getTime() -
+                        new Date(a.timestamp).getTime()
+                )
+                .slice(0, 100);
+
+            const existingLogs = existingCart?.logs ?? [];
+            const incomingLogs = data.logs ?? [];
+
+            const mergedLogs = [
+                ...incomingLogs,
+                ...existingLogs,
+            ]
+                .filter(
+                    (log, index, logs) =>
+                        logs.findIndex(
+                            (candidate) =>
+                                candidate.timestamp === log.timestamp &&
+                                candidate.message === log.message &&
+                                candidate.source === log.source
+                        ) === index
+                )
+                .sort(
+                    (a, b) =>
+                        new Date(b.timestamp).getTime() -
+                        new Date(a.timestamp).getTime()
+                )
+                .slice(0, 500);
+
+            return {
+                ...previousCarts,
+                [name]: {
+                    ...existingCart,
+                    ...data,
+
+                    anomalyResult: mergedAAD,
+
+                    // These histories are managed separately.
+                    dashboardAIDecisions:
+                        existingCart?.dashboardAIDecisions ?? [],
+
+                    logs: mergedLogs,
+                },
+            };
+        });
     }
 
     function deleteCart(name: string) {
@@ -136,30 +249,47 @@ export default function Dashboard() {
     }
 
     function addMarker(cart: Vehicle) {
-        if (cart.longLat == undefined || cart.longLat.length < 2) return
+        if (!cart.longLat || cart.longLat.length < 2) return;
 
-        // Update existing marker if one exists
-        if (!!cartMarkers.current[cart.name]) {
-            cartMarkers.current[cart.name].setLngLat([cart.longLat[0], cart.longLat[1]]);
+        const existingMarker = cartMarkers.current[cart.name];
+
+        if (existingMarker) {
+            existingMarker.setLngLat([
+                cart.longLat[0],
+                cart.longLat[1],
+            ]);
             return;
         }
 
         const customMarker = document.createElement("div");
-        customMarker.style.width = "35px";
-        customMarker.style.height = "35px";
-        customMarker.style.background = "transparent";
+        customMarker.className = styles.cartMarker;
+        customMarker.title = cart.name;
+        customMarker.setAttribute(
+            "aria-label",
+            `${cart.name} cart location`
+        );
 
-        // Create an image element inside the div
+        const label = document.createElement("div");
+        label.className = styles.cartMarkerLabel;
+        label.textContent = cart.name;
+
         const image = document.createElement("img");
-        image.src = '/images/golfcart.png';
-        image.style.width = "100%";
-        image.style.height = "100%";
-        image.style.background = 'transparent';
+        image.className = styles.cartMarkerImage;
+        image.src = "/images/golfcart.png";
+        image.alt = `${cart.name} cart`;
+        image.draggable = false;
 
+        customMarker.appendChild(label);
         customMarker.appendChild(image);
 
-        const marker = new Marker({ element: customMarker })
-            .setLngLat([cart.longLat[0], cart.longLat[1]])
+        const marker = new Marker({
+            element: customMarker,
+            anchor: "bottom",
+        })
+            .setLngLat([
+                cart.longLat[0],
+                cart.longLat[1],
+            ])
             .addTo(map.current!);
 
         cartMarkers.current[cart.name] = marker;
@@ -231,6 +361,7 @@ export default function Dashboard() {
             }
         });
             vehicleSocket.subscribe(vehicleSocketCallback);
+            vehicleSocket.subscribeDashboardAIDecisions(dashboardAIDecisionCallback);
 
         const protocol = new Protocol();
         maplibregl.addProtocol("pmtiles", protocol.tile);
@@ -246,15 +377,16 @@ export default function Dashboard() {
 
         // const locationPins: Marker[] = [];
 
-        return () => {
-            vehicleSocket.unsubscribe(vehicleSocketCallback);
+    return () => {
+        vehicleSocket.unsubscribe(vehicleSocketCallback);
+        vehicleSocket.unsubscribeDashboardAIDecisions(dashboardAIDecisionCallback);
 
-            if (activeCameraCart.current) {
-                vehicleSocket.unsubscribeCamera(activeCameraCart.current, "front");
-                vehicleSocket.unsubscribeCamera(activeCameraCart.current, "rear");
-                activeCameraCart.current = null;
-            }
-        };
+        if (activeCameraCart.current) {
+            vehicleSocket.unsubscribeCamera(activeCameraCart.current, "front");
+            vehicleSocket.unsubscribeCamera(activeCameraCart.current, "rear");
+            activeCameraCart.current = null;
+        }
+    };
 
     }, [])
 

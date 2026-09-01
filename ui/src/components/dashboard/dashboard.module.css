@@ -6,6 +6,42 @@
     border-radius: 8px;
 }
 
+.cartMarker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: max-content;
+  cursor: pointer;
+}
+
+.cartMarkerLabel {
+  padding: 3px 7px;
+  border: 1px solid #d9d9d9;
+  border-radius: 5px;
+
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f1f1f;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+}
+
+.cartMarkerImage {
+  display: block;
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+  pointer-events: none;
+}
+
 .dashboardContainer {
     height: 100dvh;
 }

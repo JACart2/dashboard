@@ -1,14 +1,43 @@
 import * as ROSLIB from "roslib";
 import CameraSubManager from "../../config/camera-subs";
+import { redis } from "../../config/db";
 import { CartUtils, Transform } from "../../config/utils";
+
+type AADAlert = {
+  timestamp: string;
+  message: string;
+  source: "local-aad";
+};
+
+type CartLogEntry = {
+  timestamp: string;
+  level: "info" | "warn" | "error" | "debug";
+  source?: string;
+  message: string;
+};
+
+type AnomalyMsg = {
+  header?: {
+    stamp?: {
+      sec?: number;
+      nanosec?: number;
+    };
+    frame_id?: string;
+  };
+  node_name?: string;
+  importance?: number;
+  type?: number;
+  msg?: string;
+};
 
 // A utility class that handles a cart's ROS connection
 export default class ROSListener {
   static listeners: { [name: string]: ROSListener } = {};
-
-  // This was to prepare for adding a blue line planned route for the cart
-  // private visualPathDebugCount = 0;
-  // private visualPathMarkerCache: Map<number, number[]> = new Map();
+  private anomalyMessages: AADAlert[] = [];
+  private logs: CartLogEntry[] = [];
+  private etaSeconds: number | null = null;
+  private tripProgress: number | null = null;
+  private lastTripUpdateAt = 0;
 
   url: string;
   name: string;
@@ -17,9 +46,14 @@ export default class ROSListener {
   topics: { [key: string]: ROSLIB.Topic };
 
   // When instantiated, connect to the given ROS server address
-  constructor(url: string, name: string) {
+  constructor(
+    url: string,
+    name: string,
+    initialLogs: CartLogEntry[] = []
+  ) {
     this.url = url;
     this.name = name;
+    this.logs = initialLogs;
 
     // Can hook up error/connection/close events for logging if desired
     this.ros = new ROSLIB.Ros({
@@ -47,13 +81,123 @@ export default class ROSListener {
     ROSListener.listeners[name] = this;
   }
 
+  private stampToIso(stamp?: {
+  sec?: number;
+  nanosec?: number;
+}): string {
+  if (!stamp || typeof stamp.sec !== "number") {
+    return new Date().toISOString();
+  }
+
+  return new Date(
+    stamp.sec * 1000 + (stamp.nanosec ?? 0) / 1_000_000
+  ).toISOString();
+}
+
+private importanceToLevel(
+  importance?: number
+): "info" | "warn" | "error" | "debug" {
+  switch (importance) {
+    case 2:
+      return "error";
+    case 1:
+      return "warn";
+    case 0:
+    default:
+      return "info";
+  }
+}
+
+private levelToImportance(
+  level: "info" | "warn" | "error" | "debug"
+): number {
+  switch (level) {
+    case "error":
+      return 2;
+    case "warn":
+      return 1;
+    case "debug":
+    case "info":
+    default:
+      return 0;
+  }
+}
+
+private updateTripTelemetry() {
+  const now = Date.now();
+
+  if (now - this.lastTripUpdateAt < 1000) {
+    return;
+  }
+
+  this.lastTripUpdateAt = now;
+
+  void CartUtils.editCart(this.name, {
+    ...(this.etaSeconds !== null
+      ? { etaSeconds: this.etaSeconds }
+      : {}),
+    ...(this.tripProgress !== null
+      ? { tripProgress: this.tripProgress }
+      : {}),
+  });
+}
+
+private async pushLog(log: CartLogEntry) {
+  this.logs = [log, ...this.logs].slice(0, 500);
+
+  await CartUtils.editCart(this.name, {
+    logs: this.logs,
+  });
+
+  const streamKey = `cart:${this.name}:dashboard-ai:input`;
+
+  const aiPayload = {
+    timestamp: log.timestamp,
+    cartName: this.name,
+    nodeName: log.source ?? "ai_anomaly_logging",
+    importance: this.levelToImportance(log.level),
+    type: 0,
+    text: log.message,
+  };
+
+  const entryId = await redis.xAdd(streamKey, "*", {
+    payload: JSON.stringify(aiPayload),
+  });
+
+  await redis.xTrim(streamKey, "MAXLEN", 1000);
+
+  console.log("[Dashboard AI] Stored ROS log input:", {
+    cartName: this.name,
+    streamKey,
+    entryId,
+    message: log.message,
+  });
+}
+
   subscribeToTopics(): void {
     // Decode and emit incoming camera frames
-    this.topics["compressed_image"].subscribe((message) => {
-      // console.log(`[ROS] Received 'compressed_image':`, message);
+    this.topics["zed_front"].subscribe((message) => {
+      const data = message?.["data"];
 
-      const url = CameraSubManager.encodeBase64(message?.["data"]);
-      CameraSubManager.emitFrame(this.name, url);
+      if (!data) {
+        console.warn("[Camera] Empty front camera frame");
+        return;
+      }
+
+      const url = CameraSubManager.encodeBase64(data);
+      CameraSubManager.emitFrame(this.name, "front", url);
+    });
+
+    this.topics["zed_rear"].subscribe((message: any) => {
+      const data = message?.["data"];
+
+      if (!data) {
+        console.warn("[Camera] Empty rear camera frame");
+        return;
+      }
+
+      const url = CameraSubManager.encodeBase64(data);
+      CameraSubManager.emitFrame(this.name, "rear", url);
     });
 
     // Update cart location
@@ -64,14 +208,6 @@ export default class ROSListener {
       CartUtils.editCart(this.name, { longLat });
     });
 
-    this.topics["visual_path"].subscribe((message: any) => {
-      // console.log(`[ROS] Received 'visual_path':`, message);
-    });
-
-    this.topics["vehicle_state"].subscribe((message: any) => {
-      // console.log(`[ROS] Received 'vehicle_state':`, message);
-    });
-
     this.topics["clicked_point"].subscribe((message: any) => {
       console.log(`[ROS] Received 'clicked_point':`, message);
 
@@ -79,11 +215,43 @@ export default class ROSListener {
       // The UI repo sends the real selected destination name to the dashboard API.
     });
     
-    this.topics["zed_rear"].subscribe((message: any) => {
-      // console.log(`[ROS] Received 'zed_rear':`, message);
 
-      const url = CameraSubManager.encodeBase64(message?.["data"]);
-      CameraSubManager.emitFrame(this.name, url);
+    this.topics["eta"].subscribe((message: any) => {
+      const etaSeconds = Number(message?.data);
+
+      if (!Number.isFinite(etaSeconds)) {
+        console.warn(
+          `[ROS] Invalid /eta message for ${this.name}:`,
+          message
+        );
+        return;
+      }
+
+      this.etaSeconds = Math.max(
+        0,
+        Math.round(etaSeconds)
+      );
+
+      this.updateTripTelemetry();
+    });
+
+    this.topics["eta_percentage"].subscribe((message: any) => {
+      const tripProgress = Number(message?.data);
+
+      if (!Number.isFinite(tripProgress)) {
+        console.warn(
+          `[ROS] Invalid /eta_percentage message for ${this.name}:`,
+          message
+        );
+        return;
+      }
+
+      this.tripProgress = Math.max(
+        0,
+        Math.min(100, Math.round(tripProgress))
+      );
+
+      this.updateTripTelemetry();
     });
 
     this.topics["nav_cmd"].subscribe((message) => {
@@ -92,19 +260,58 @@ export default class ROSListener {
       const speed = message?.["vel"];
       CartUtils.editCart(this.name, { speed });
     });
-    try {
-      this.topics["anomaly_result"].subscribe((message: any) => {
-        console.log("                      INCOMING ANOMALY MESSAGE")
-        console.log("______________________________________________________________________")
-        console.log(message.data);
-        console.log("______________________________________________________________________")
-        console.log("")
 
-        const anomalyResult = message.data;
-        CartUtils.editCart(this.name, { anomalyResult });
+    try {
+      this.topics["ai_anomaly_logging"].subscribe((message: AnomalyMsg) => {
+        const logMessage = message.msg?.trim();
+
+        if (!logMessage) {
+          console.warn(
+            `[ROS] Received empty ai_anomaly_logging message:`,
+            message
+          );
+          return;
+        }
+
+        void this.pushLog({
+          timestamp: this.stampToIso(message.header?.stamp),
+          level: this.importanceToLevel(message.importance),
+          source: message.node_name?.trim() || "ai_anomaly_logging",
+          message: logMessage,
+        });
       });
     } catch (e) {
-      console.error(`[ROS] Failed to subscribe to 'anomaly_result':`, e);
+      console.error(
+        `[ROS] Failed to subscribe to 'ai_anomaly_logging':`,
+        e
+      );
+    }
+    
+    try {
+      this.topics["anomaly_result"].subscribe((message: any) => {
+        console.log("INCOMING ANOMALY MESSAGE");
+        console.log(message.data);
+
+        const incomingAlert: AADAlert = {
+          timestamp: new Date().toISOString(),
+          message: String(message.data),
+          source: "local-aad",
+        };
+
+        this.anomalyMessages = [
+          incomingAlert,
+          ...this.anomalyMessages,
+        ].slice(0, 100);
+
+        CartUtils.editCart(this.name, {
+          anomalyResult: this.anomalyMessages,
+        });
+      });
+    } catch (e) {
+      console.error(
+        `[ROS] Failed to subscribe to 'anomaly_result':`,
+        e
+      );
     }
   }
 }
@@ -130,24 +337,46 @@ const CART_TOPICS = {
     messageType: "geometry_msgs/msg/PointStamped",
     throttle_rate: 500,
   },
-  compressed_image: {
-    name: "/zed_front/zed_node_0/right_raw/image_raw_color/compressed",
+  zed_front: {
+    name: "/zed_front/zed_node_0/rgb/color/rect/image/compressed",
     messageType: "sensor_msgs/msg/CompressedImage",
-    throttle_rate: 1000, // this can be changed based on bandwidth
+    throttle_rate: 1000,
   },
   zed_rear: {
-    name: "/zed/zed_node/rgb/image_raw_color/compressed",
-    messageType: "sensor_msgs/msg/Image",
-    throttle_rate: 500,
+    name: "/zed_rear/zed_node_1/rgb/color/rect/image/compressed",
+    messageType: "sensor_msgs/msg/CompressedImage",
+    throttle_rate: 1000,
   },
   nav_cmd: {
     name: "/nav_cmd",
     messageType: "motor_control_interface/msg/VelAngle",
     throttle_rate: 500, // this can be changed based on bandwidth
   },
+  eta: {
+    name: "/eta",
+    messageType: "std_msgs/msg/UInt64",
+    throttle_rate: 0,
+  },
+  eta_percentage: {
+    name: "/eta_percentage",
+    messageType: "std_msgs/msg/UInt64",
+    throttle_rate: 0,
+  },
+
+  //ai anomamly
   anomaly_result: {
     name: "/aad/alerts",
     messageType: "std_msgs/msg/String",
-    throttle_rate: 500,
+    throttle_rate: 0,
+  },
+  ai_anomaly_logging: {
+    name: "/ai_anomaly_logging",
+    messageType: "anomaly_msg/msg/AnomalyMsg",
+    throttle_rate: 0, // this can be changed based on bandwidth, may drop essential logs for analyzing if throttled.
+  },
+  aad_decisions: {
+    name: "/aad/decisions",
+    messageType: "std_msgs/msg/String",
+    throttle_rate: 0,
   },
 };

@@ -11,7 +11,7 @@ import fs = require("fs");
 import dotenv from "dotenv";
 
 import routes from "./routes";
-import { redisSub } from "./config/db";
+import { redis, redisSub } from "./config/db";
 import CameraSubManager from "./config/camera-subs";
 
 /*
@@ -212,12 +212,6 @@ type CameraSubscriptionPayload =
       camera?: CameraName;
     };
 
-type CameraFramePayload = {
-  name: string;
-  camera?: CameraName;
-  data: string;
-};
-
 function parseCameraSubscription(
   payload: CameraSubscriptionPayload
 ): {
@@ -280,7 +274,7 @@ io.on("connection", (socket) => {
        * If it later distinguishes front/rear cameras, pass the camera
        * field into the manager as well.
        */
-      CameraSubManager.subscribe(subscription.name, socket);
+      CameraSubManager.subscribe(subscription.name, subscription.camera, socket);
     }
   );
 
@@ -302,42 +296,17 @@ io.on("connection", (socket) => {
         ...subscription,
       });
 
-      CameraSubManager.unsubscribe(subscription.name, socket);
+      CameraSubManager.unsubscribe(subscription.name, subscription.camera, socket);
     }
   );
-
-  socket.on("camera-frame", (data: CameraFramePayload) => {
-    if (
-      !data?.name ||
-      !data?.data ||
-      typeof data.data !== "string"
-    ) {
-      console.warn("[Camera] Invalid camera-frame payload");
-      return;
-    }
-
-    const name = data.name.trim().toLowerCase();
-    const camera = data.camera ?? "front";
-
-    if (!name) {
-      console.warn("[Camera] Empty cart name in camera frame");
-      return;
-    }
-
-    io.emit("camera-update", {
-      name,
-      camera,
-      data: data.data,
-    });
-  });
 
   socket.on("disconnect", (reason) => {
     console.log("[Socket.IO] Client disconnected:", {
       id: socket.id,
       reason,
+        });
+      });
     });
-  });
-});
 
 /*
  * API routes should be registered before the SPA fallback.
@@ -397,6 +366,26 @@ redisSub.subscribe("ai:log-results", (message) => {
   } catch (error) {
     console.error(
       "[Redis] Failed to parse AI analysis message:",
+      error
+    );
+  }
+});
+
+redisSub.subscribe("dashboard-ai:decision", (message) => {
+  try {
+    const decision = JSON.parse(message);
+
+    console.log("[Dashboard AI] Decision received:", {
+      cartName: decision.cartName,
+      model: decision.model,
+      anomaly: decision.anomaly,
+      severity: decision.severity,
+    });
+
+    io.emit("dashboard-ai-decision", decision);
+  } catch (error) {
+    console.error(
+      "[Dashboard AI] Failed to parse decision:",
       error
     );
   }

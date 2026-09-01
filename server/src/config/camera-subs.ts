@@ -1,58 +1,69 @@
 import { Socket } from "socket.io";
 
+type CameraName = "front" | "rear";
+
 export default class CameraSubManager {
   private static subscriptions: { [key: string]: Set<Socket> } = {};
 
-  static subscribe(cartName: string, socket: Socket) {
-    if (!this.subscriptions[cartName]) this.subscriptions[cartName] = new Set();
-
-    this.subscriptions[cartName].add(socket);
+  private static key(cartName: string, camera: CameraName) {
+    return `${cartName.trim().toLowerCase()}:${camera}`;
   }
 
-  static unsubscribe(cartName: string, socket: Socket) {
-    this.subscriptions[cartName]?.delete(socket);
+  static subscribe(cartName: string, camera: CameraName, socket: Socket) {
+    const key = this.key(cartName, camera);
+
+    if (!this.subscriptions[key]) {
+      this.subscriptions[key] = new Set();
+    }
+
+    this.subscriptions[key].add(socket);
+  }
+
+  static unsubscribe(cartName: string, camera: CameraName, socket: Socket) {
+    const key = this.key(cartName, camera);
+    this.subscriptions[key]?.delete(socket);
   }
 
   static unsubscribeAll(socket: Socket) {
-    Object.values(this.subscriptions).forEach((cart) => {
-      cart.delete(socket);
+    Object.values(this.subscriptions).forEach((subscribers) => {
+      subscribers.delete(socket);
     });
   }
 
-  static isSubscribed(cartName: string, socket: Socket) {
-    return this.subscriptions[cartName]?.has(socket) ?? false;
+  static getCameraSubscriptions(cartName: string, camera: CameraName) {
+    const key = this.key(cartName, camera);
+    return this.subscriptions[key] ?? new Set<Socket>();
   }
 
-  static getCartSubscriptions(cartName: string) {
-    return this.subscriptions[cartName] ?? [];
-  }
-
-  static emitFrame(cartName: string, data: string) {
-    const sockets = CameraSubManager.getCartSubscriptions(cartName);
+  static emitFrame(cartName: string, camera: CameraName, data: string) {
+    const normalizedName = cartName.trim().toLowerCase();
+    const sockets = CameraSubManager.getCameraSubscriptions(
+      normalizedName,
+      camera,
+    );
 
     sockets.forEach((socket) => {
-      socket.emit("camera-update", { name: cartName, data: data });
+      socket.emit("camera-update", {
+        name: normalizedName,
+        camera,
+        data,
+      });
     });
   }
 
-  static encodeBase64(data: string) {
-    // console.log("[CAM] Raw image data: ", data);
+  static encodeBase64(data: string | number[]) {
+    if (typeof data === "string") {
+      return `data:image/jpeg;base64,${data}`;
+    }
 
-    // let binaryString = atob(data); // Decode Base64 string to binary
-    // let len = binaryString.length;
-    // let bytes = new Uint8Array(len);
-    // for (let i = 0; i < len; i++) {
-    //   bytes[1] = binaryString.charCodeAt(1);
-    // }
+    const chunkSize = 0x8000;
+    let binary = "";
 
-    // // Create a Blob from the binary data
-    // let blob = new Blob([bytes], { type: "image/jpeg" });
-    // let imageUrl = URL.createObjectURL(blob);
+    for (let i = 0; i < data.length; i += chunkSize) {
+      const chunk = data.slice(i, i + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
 
-    let blob = "data:image/jpeg;base64," + data;
-
-    // console.log("[CAM] Image blob: ", blob);
-
-    return blob;
+    return `data:image/jpeg;base64,${btoa(binary)}`;
   }
 }
